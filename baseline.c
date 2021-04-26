@@ -231,7 +231,7 @@ double calc_cost(Matrix P, Matrix Q) {
   return 2*sum;
 }
 
-Matrix tsne(Matrix X, int n_dim, double perplexity) {
+Matrix tsne(Matrix X, int n_dim, double perplexity, Matrix Y) {
 
   /*
    * Runs t-SNE on the matrix A, reducing its dimensionality to n_dim dimensions.
@@ -253,7 +253,6 @@ Matrix tsne(Matrix X, int n_dim, double perplexity) {
   calc_joint_probabilities(X, P, perplexity, 1e-5);
 
   // determine embeddings
-  Matrix Y = create_matrix(n, n_dim);
   Matrix Q = create_matrix(n, n);
   Matrix Q_numerators = create_matrix(n, n);
   Matrix grad_Y = create_matrix(n, n_dim);
@@ -264,7 +263,6 @@ Matrix tsne(Matrix X, int n_dim, double perplexity) {
   // initialisations
   for (int i=0; i<n; i++) {
     for (int j=0; j<n_dim; j++) {
-      Y.data[i*n_dim + j] = rand_max_inv*(double)rand() - 0.5;  // uniform initialisation over range [-0.5, 0.5]
       Y_delta.data[i*n_dim + j] = 0;
       gains.data[i*n_dim + j] = 1;
     }
@@ -365,7 +363,8 @@ Matrix tsne(Matrix X, int n_dim, double perplexity) {
 int main() {
   printf("Running example on 2,500 MNIST digits...\n");
   Matrix X = load_matrix("mnist2500_X_pca.txt");
-  Matrix Y = tsne(X, 2, 20);
+  Matrix Y = load_matrix("mnist2500_Y_init.txt");
+  tsne(X, 2, 20, Y);
   store_matrix("mnist2500_Y.txt", Y);
   return 0;
 }
