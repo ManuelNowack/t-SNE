@@ -235,7 +235,8 @@ Matrix tsne(Matrix X, int n_dim, double perplexity, Matrix Y) {
 
   /*
    * Runs t-SNE on the matrix A, reducing its dimensionality to n_dim dimensions.
-   * Low dimensional embedding is stored in Y.
+   * Y is expected to contain the initial low dimensional embeddings.
+   * The values of Y are overwritten and at the end contain the calculated embeddings.
    */
 
   // hyperparameters
