@@ -38,43 +38,38 @@ void calc_squared_euclidean_distances(Matrix X, Matrix D) {
   }
 }
 
-double calc_log_perplexity(double *distances, double *probabilities, int n, int k, double precision) {
+void calc_log_perplexity(double *distances, double *probabilities, int n, int k, double precision, double *log_perplexity, double *normlizer) {
 
   /*
    * Calculate the log perplexity H for sample k for the given distances to the other element and precision.
    * Precision is the inverse of two times the variance.
-   * The function returns the log perplexity and stores the corresponding probabilities in the array probabilities.
+   * Unnormalized probabilities, log perplexity, and normalizer of the probabilities are returned by reference.
    */
 
   // calculate (unnormalised) conditional probabilities
-  double p[n];
   for (int i=0; i<n; i++) {
     if (i == k) {
-      p[i] = 0;
+      probabilities[i] = 0;
     } else {
-      p[i] = exp(-precision*distances[i]);
+      probabilities[i] = exp(-precision*distances[i]);
     }
   }
 
   // normalisation
   double Z = 0;
   for (int i=0; i<n; i++) {
-    Z += p[i];
+    Z += probabilities[i];
   }
 
   // calculate log perplexity
   double H = 0;
   for (int i=0; i<n; i++) {
-    H += p[i]*distances[i];
+    H += probabilities[i]*distances[i];
   }
   H = precision*H/Z + log(Z);
 
-  // store probabilities;
-  for (int i=0; i<n; i++) {
-    probabilities[i] = p[i]/Z;
-  }
-
-  return H;
+  *log_perplexity = H;
+  *normlizer = Z;
 }
 
 void calc_joint_probabilities(Matrix X, Matrix P, double perplexity, double tol) {
@@ -109,7 +104,8 @@ void calc_joint_probabilities(Matrix X, Matrix P, double perplexity, double tol)
     double precision_max = HUGE_VAL;
     double *distances = &D.data[i*n];
     double *probabilities = &P.data[i*n];
-    double actual_log_perplexity = calc_log_perplexity(distances, probabilities, n, i, precisions[i]);
+    double actual_log_perplexity, normalizer;
+    calc_log_perplexity(distances, probabilities, n, i, precisions[i], &actual_log_perplexity, &normalizer);
 
     // bisection method until suitable precision is found or maximum number of tries has been reached
     int tries = 0;
@@ -136,9 +132,16 @@ void calc_joint_probabilities(Matrix X, Matrix P, double perplexity, double tol)
       }
 
       // calculate new log perplexity
-      actual_log_perplexity = calc_log_perplexity(distances, probabilities, n, i, precisions[i]);
-      diff = actual_log_perplexity - target_log_perplexity;
       tries++;
+      if (tries < 50) {
+        calc_log_perplexity(distances, probabilities, n, i, precisions[i], &actual_log_perplexity, &normalizer);
+        diff = actual_log_perplexity - target_log_perplexity;
+      }
+    }
+
+    // normalize probabilities
+    for (int i=0; i<n; i++) {
+      probabilities[i] = probabilities[i]/normalizer;
     }
   }
 
@@ -201,7 +204,7 @@ void calc_affinities(Matrix Y, Matrix Q, Matrix Q_numerators) {
   for (int i=0; i<n; i++) {
     for (int j=i+1; j<n; j++) {
       double value = Q_numerators.data[i*n + j];
-      value = 0.5*value/sum;  // multiplication by 0.5, as sum only sum of upper triangle elements
+      value = 0.5/sum*value;  // multiplication by 0.5, as sum only sum of upper triangle elements
       
       // ensure minimum probability
       if (value < 1e-12) value = 1e-12;
