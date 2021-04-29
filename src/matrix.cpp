@@ -1,18 +1,8 @@
-#ifndef MATRIX_H
-#define MATRIX_H
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <tsne/matrix.h>
 
-
-
-typedef struct {
-  int nrows, ncols;
-  double *data; // matrix elements in row major order
-} Matrix;
-
-Matrix load_matrix(char* filepath) {
-
+Matrix load_matrix(const char *filepath) {
   /*
    * Load data in text file at filepath into Matrix structure.
    */
@@ -25,11 +15,7 @@ Matrix load_matrix(char* filepath) {
   }
 
   // determine matrix dimension
-  Matrix A = {
-    .nrows = 0,
-    .ncols = 0,
-    .data = NULL
-  };
+  Matrix A = {.nrows = 0, .ncols = 0, .data = NULL};
 
   double val;
   char character;
@@ -38,7 +24,7 @@ Matrix load_matrix(char* filepath) {
   do {
     fscanf(in_file, "%lf", &val);
     A.ncols++;
-    character = (char) fgetc(in_file);
+    character = (char)fgetc(in_file);
   } while (character != '\n' && character != EOF);
   A.nrows++;
 
@@ -47,11 +33,13 @@ Matrix load_matrix(char* filepath) {
   do {
     fscanf(in_file, "%lf", &val);
     counter++;
-    character = (char) fgetc(in_file);
+    character = (char)fgetc(in_file);
     if (character == '\n') {
       // check if row contains as many elements as required
       if (counter != A.ncols) {
-        printf("Error: Invalid number of elements in row %d. %d instad of %d.\n", A.nrows, counter, A.ncols);
+        printf(
+            "Error: Invalid number of elements in row %d. %d instad of %d.\n",
+            A.nrows, counter, A.ncols);
         exit(-1);
       }
       counter = 0;
@@ -60,7 +48,7 @@ Matrix load_matrix(char* filepath) {
   } while (character != EOF);
 
   // load data
-  A.data = (double*)malloc(A.nrows*A.ncols*sizeof(double));
+  A.data = (double *)malloc(A.nrows * A.ncols * sizeof(double));
   if (!A.data) {
     printf("Error: Could not allocate memory to store matrix.\n");
     exit(-1);
@@ -70,7 +58,7 @@ Matrix load_matrix(char* filepath) {
   do {
     fscanf(in_file, "%lf", &A.data[i]);
     i++;
-    character = (char) fgetc(in_file);
+    character = (char)fgetc(in_file);
   } while (character != EOF);
   fclose(in_file);
 
@@ -79,8 +67,7 @@ Matrix load_matrix(char* filepath) {
   return A;
 }
 
-void store_matrix(char *filepath, Matrix A) {
-
+void store_matrix(const char *filepath, Matrix A) {
   /*
    * Store matrix A into a text file at filepath.
    */
@@ -90,23 +77,20 @@ void store_matrix(char *filepath, Matrix A) {
   int n = A.nrows;
   int m = A.ncols;
 
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<m-1; j++) {
-      fprintf(out_file, "%.18e ", A.data[m*i + j]);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m - 1; j++) {
+      fprintf(out_file, "%.18e ", A.data[m * i + j]);
     }
-    fprintf(out_file, "%.18e\n", A.data[m*i + m-1]);
+    fprintf(out_file, "%.18e\n", A.data[m * i + m - 1]);
   }
 
   fclose(out_file);
 }
 
 Matrix create_matrix(int nrows, int ncols) {
-
-  Matrix A = {
-    .nrows = nrows,
-    .ncols = ncols,
-    .data = (double*)malloc(nrows*ncols*sizeof(double))
-  };
+  Matrix A = {.nrows = nrows,
+              .ncols = ncols,
+              .data = (double *)malloc(nrows * ncols * sizeof(double))};
   if (!A.data) {
     printf("Error: Could not allocate memory for matrix.\n");
     exit(-1);
@@ -119,6 +103,3 @@ void assert_finite_matrix(Matrix A) {
   printf("assert_finite_matrix not implemented.\n");
   exit(-1);
 }
-
-
-#endif
