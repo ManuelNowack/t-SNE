@@ -294,8 +294,15 @@ void tsne_baseline(Matrix X, int n_dim, double perplexity, Matrix Y) {
     calc_affinities(Y, Q, Q_numerators);
 
     // calculate gradient with respect to embeddings Y
-    elementwise_matrix_subtraction(P, Q, tmp);
-    elementwise_matrix_multiplication(tmp, Q_numerators, tmp);
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        double value = (P.data[i * n + j] - Q.data[i * n + j]) *
+                       Q_numerators.data[i * n + j];
+        tmp.data[i * n + j] = value;
+        tmp.data[j * n + i] = value;
+      }
+      tmp.data[i * n + i] = 0.0;
+    }
     for (int i = 0; i < n; i++) {
       for (int k = 0; k < n_dim; k++) {
         double value = 0;

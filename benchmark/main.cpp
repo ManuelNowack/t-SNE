@@ -61,20 +61,18 @@ double perf_test(tsne_func_t *f, string desc) {
   // Warm-up phase: we determine a number of executions that allows
   // the code to be executed for at least CYCLES_REQUIRED cycles.
   // This helps excluding timing overhead when measuring small runtimes.
-  /*
   do {
-      num_runs = num_runs * multiplier;
-      start = start_tsc();
-      for (size_t i = 0; i < num_runs; i++) {
-          f(X, 2, 20, Y);
-      }
-      end = stop_tsc(start);
+    num_runs = num_runs * multiplier;
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; i++) {
+      f(X, 2, 20, Y);
+    }
+    end = stop_tsc(start);
 
-      cycles = (double)end;
-      multiplier = (CYCLES_REQUIRED) / (cycles);
+    cycles = (double)end;
+    multiplier = (CYCLES_REQUIRED) / (cycles);
 
   } while (multiplier > 2);
-  */
 
   // Actual performance measurements repeated REP times.
   // We simply store all results and compute medians during post-processing.
