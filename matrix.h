@@ -115,38 +115,6 @@ Matrix create_matrix(int nrows, int ncols) {
   return A;
 }
 
-double elementwise_matrix_subtraction(Matrix op1, Matrix op2, Matrix res) {
-
-  /*
-   * Calculate elementwise matrix difference res = op1 - op2
-   */
-
-  int n = res.nrows;
-  int m = res.ncols;
-
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<m; j++) {
-      res.data[i*m + j] = op1.data[i*m + j] - op2.data[i*m + j];
-    }
-  }
-}
-
-double elementwise_matrix_multiplication(Matrix op1, Matrix op2, Matrix res) {
-
-  /*
-   * Calculate elementwise matrix multiplication res = op1 * op2
-   */
-
-  int n = res.nrows;
-  int m = res.ncols;
-
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<m; j++) {
-      res.data[i*m + j] = op1.data[i*m + j] * op2.data[i*m + j];
-    }
-  }
-}
-
 void assert_finite_matrix(Matrix A) {
   printf("assert_finite_matrix not implemented.\n");
   exit(-1);
