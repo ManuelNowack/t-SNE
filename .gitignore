@@ -24,6 +24,9 @@ build/
 ### VS Code ###
 .vscode/
 
+# Ignore cache folder created by clangd
+.cache
+
 ### Linux ###
 *~
 
