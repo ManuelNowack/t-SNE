@@ -68,14 +68,12 @@ void destroy_tsne_variables(tsne_var_t &var) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given tsne function.
-double perf_test_tsne(tsne_func_t *f) {
+double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
   double cycles = 0.;
   long num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
-  Matrix X = load_matrix("mnist2500_X_pca.txt");
-  Matrix Y = load_matrix("mnist2500_Y_init.txt");
   int n = X.nrows;
   const int n_dim = 2;
   tsne_var_t var;
@@ -120,13 +118,12 @@ double perf_test_tsne(tsne_func_t *f) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
-double perf_test_joint_probs(joint_probs_func_t *f) {
+double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
   double cycles = 0.;
   long num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
-  Matrix X = load_matrix("mnist2500_X_pca.txt");
   int n = X.nrows;
   const int n_dim = 2;
   tsne_var_t var;
@@ -166,15 +163,13 @@ double perf_test_joint_probs(joint_probs_func_t *f) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
-double perf_test_grad_desc(grad_desc_func_t *f,
-                           joint_probs_func_t *joint_probs) {
+double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
+                           const Matrix &X, Matrix &Y) {
   double cycles = 0.;
   long num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
-  Matrix X = load_matrix("mnist2500_X_pca.txt");
-  Matrix Y = load_matrix("mnist2500_Y_init.txt");
   int n = X.nrows;
   const int n_dim = 2;
   tsne_var_t var;
@@ -216,8 +211,13 @@ double perf_test_grad_desc(grad_desc_func_t *f,
 }
 
 int main(int argc, char **argv) {
-  double perf;
-  int i;
+  if (argc < 3) {
+    cerr << "Usage: " << argv[0] << " X_PCA Y_INIT" << endl;
+    return 1;
+  }
+
+  Matrix X = load_matrix(argv[1]);
+  Matrix Y = load_matrix(argv[2]);
 
   register_functions();
   auto &tsne_func_registry = FuncResitry<tsne_func_t>::get_instance();
@@ -227,20 +227,22 @@ int main(int argc, char **argv) {
 
   // TODO(mrettenba): Check validity of functions.
 
-  for (i = 0; i < tsne_func_registry.num_funcs; i++) {
-    perf = perf_test_tsne(tsne_func_registry.funcs[i]);
+  double perf;
+  for (int i = 0; i < tsne_func_registry.num_funcs; i++) {
+    perf = perf_test_tsne(tsne_func_registry.funcs[i], X, Y);
     cout << tsne_func_registry.func_names[i] << "," << perf << endl;
   }
 
-  for (i = 0; i < joint_probs_func_registry.num_funcs; i++) {
-    perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i]);
+  for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
+    perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X);
     cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
   }
 
   // Pick one joint_probs implementation to populate the variables.
   auto joint_probs = joint_probs_func_registry.funcs[0];
-  for (i = 0; i < grad_desc_func_registry.num_funcs; i++) {
-    perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs);
+  for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
+    perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs, X,
+                               Y);
     cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
   }
 
