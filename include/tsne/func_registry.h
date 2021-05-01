@@ -6,11 +6,16 @@
 #include <string>
 #include <vector>
 
-typedef void tsne_func_t(Matrix, int, double, Matrix);
+typedef void tsne_func_t(const Matrix& X, Matrix& Y, tsne_var_t& var,
+                         int n_dim);
+typedef void joint_probs_func_t(const Matrix& X, Matrix& P, Matrix& D);
+typedef void grad_desc_func_t(Matrix& Y, tsne_var_t& var, int n, int n_dim,
+                              double momentum);
 
+template <class T>
 class FuncResitry {
  public:
-  std::vector<tsne_func_t*> funcs;
+  std::vector<T*> funcs;
   std::vector<std::string> func_names;
   int num_funcs = 0;
 
@@ -26,7 +31,7 @@ class FuncResitry {
 
   // Registers a user function to be tested by the driver program. Registers a
   // string description of the function as well.
-  void add_function(tsne_func_t* f, std::string name) {
+  void add_function(T* f, std::string name) {
     funcs.push_back(f);
     func_names.emplace_back(name);
     num_funcs++;
@@ -36,15 +41,7 @@ class FuncResitry {
   FuncResitry(){};
 };
 
-// Put all function declarations here.
-tsne_func_t tsne_baseline;
-
 // Called by the driver to register your functions.
-void register_functions() {
-  FuncResitry& func_registry = FuncResitry::get_instance();
-
-  // Put all functions to test here.
-  func_registry.add_function(&tsne_baseline, "tsne_baseline");
-}
+void register_functions();
 
 #endif  // TSNE_FUNC_REGISTRY_H_
