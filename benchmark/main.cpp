@@ -27,12 +27,8 @@
  *  along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <tsne/func_registry.h>
+#include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
 #include <iostream>
@@ -70,9 +66,9 @@ void destroy_tsne_variables(tsne_var_t &var) {
   free(var.D.data);
 }
 
-// Computes and reports the number of cycles required per iteration.
+// Computes and reports the number of cycles required per iteration
 // for the given tsne function.
-double perf_test_tsne(tsne_func_t *f, string desc) {
+double perf_test_tsne(tsne_func_t *f) {
   double cycles = 0.;
   long num_runs = 1;
   double multiplier = 1;
@@ -82,7 +78,6 @@ double perf_test_tsne(tsne_func_t *f, string desc) {
   Matrix Y = load_matrix("mnist2500_Y_init.txt");
   int n = X.nrows;
   const int n_dim = 2;
-
   tsne_var_t var;
   create_tsne_variables(var, n, n_dim);
 
@@ -123,20 +118,130 @@ double perf_test_tsne(tsne_func_t *f, string desc) {
   return cycles;
 }
 
+// Computes and reports the number of cycles required per iteration
+// for the given joint probabilities function.
+double perf_test_joint_probs(joint_probs_func_t *f) {
+  double cycles = 0.;
+  long num_runs = 1;
+  double multiplier = 1;
+  uint64_t start, end;
+
+  Matrix X = load_matrix("mnist2500_X_pca.txt");
+  int n = X.nrows;
+  const int n_dim = 2;
+  tsne_var_t var;
+  create_tsne_variables(var, n, n_dim);
+
+  do {
+    num_runs = num_runs * multiplier;
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; i++) {
+      f(X, var.P, var.D);
+    }
+    end = stop_tsc(start);
+
+    cycles = (double)end;
+    multiplier = (CYCLES_REQUIRED) / (cycles);
+
+  } while (multiplier > 2);
+
+  double total_cycles = 0;
+  for (size_t j = 0; j < REP; j++) {
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; ++i) {
+      f(X, var.P, var.D);
+    }
+    end = stop_tsc(start);
+
+    cycles = ((double)end) / num_runs;
+    total_cycles += cycles;
+  }
+  total_cycles /= REP;
+
+  cycles = total_cycles;
+  destroy_tsne_variables(var);
+
+  return cycles;
+}
+
+// Computes and reports the number of cycles required per iteration
+// for the given joint probabilities function.
+double perf_test_grad_desc(grad_desc_func_t *f,
+                           joint_probs_func_t *joint_probs) {
+  double cycles = 0.;
+  long num_runs = 1;
+  double multiplier = 1;
+  uint64_t start, end;
+
+  Matrix X = load_matrix("mnist2500_X_pca.txt");
+  Matrix Y = load_matrix("mnist2500_Y_init.txt");
+  int n = X.nrows;
+  const int n_dim = 2;
+  tsne_var_t var;
+  create_tsne_variables(var, n, n_dim);
+
+  // Populate the joint probability matrix.
+  joint_probs(X, var.P, var.D);
+
+  do {
+    num_runs = num_runs * multiplier;
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; i++) {
+      f(Y, var, n, n_dim, kFinalMomentum);
+    }
+    end = stop_tsc(start);
+
+    cycles = (double)end;
+    multiplier = (CYCLES_REQUIRED) / (cycles);
+
+  } while (multiplier > 2);
+
+  double total_cycles = 0;
+  for (size_t j = 0; j < REP; j++) {
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; ++i) {
+      f(Y, var, n, n_dim, kFinalMomentum);
+    }
+    end = stop_tsc(start);
+
+    cycles = ((double)end) / num_runs;
+    total_cycles += cycles;
+  }
+  total_cycles /= REP;
+
+  cycles = total_cycles;
+  destroy_tsne_variables(var);
+
+  return cycles;
+}
+
 int main(int argc, char **argv) {
   double perf;
   int i;
 
   register_functions();
-  auto &func_registry = FuncResitry<tsne_func_t>::get_instance();
-
-  cout << func_registry.num_funcs << " functions registered." << endl;
+  auto &tsne_func_registry = FuncResitry<tsne_func_t>::get_instance();
+  auto &joint_probs_func_registry =
+      FuncResitry<joint_probs_func_t>::get_instance();
+  auto &grad_desc_func_registry = FuncResitry<grad_desc_func_t>::get_instance();
 
   // TODO(mrettenba): Check validity of functions.
 
-  for (i = 0; i < func_registry.num_funcs; i++) {
-    perf = perf_test_tsne(func_registry.funcs[i], func_registry.func_names[i]);
-    cout << func_registry.func_names[i] << "," << perf << endl;
+  for (i = 0; i < tsne_func_registry.num_funcs; i++) {
+    perf = perf_test_tsne(tsne_func_registry.funcs[i]);
+    cout << tsne_func_registry.func_names[i] << "," << perf << endl;
+  }
+
+  for (i = 0; i < joint_probs_func_registry.num_funcs; i++) {
+    perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i]);
+    cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
+  }
+
+  // Pick one joint_probs implementation to populate the variables.
+  auto joint_probs = joint_probs_func_registry.funcs[0];
+  for (i = 0; i < grad_desc_func_registry.num_funcs; i++) {
+    perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs);
+    cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
   }
 
   return 0;
