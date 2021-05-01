@@ -1,8 +1,8 @@
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <tsne/debug.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
@@ -95,10 +95,6 @@ void joint_probs_baseline(const Matrix& X, Matrix& P, Matrix& D) {
   // loop over all datapoints to determine precision and corresponding
   // probabilities
   for (int i = 0; i < n; i++) {
-    if (i % 500 == 0) {
-      printf("Computing probabilities for point %d of %d ...\n", i, n);
-    }
-
     double precision_min = 0.0;
     double precision_max = HUGE_VAL;
     double* distances = &D.data[i * n];
@@ -153,7 +149,7 @@ void joint_probs_baseline(const Matrix& X, Matrix& P, Matrix& D) {
     sum += sqrt(1 / (2 * precisions[i]));
   }
   double mean_stddev = sum / n;
-  printf("Mean standard deviation: %.3e\n", mean_stddev);
+  DEBUG("Mean standard deviation: " << mean_stddev);
 
   // convert conditional probabilties to joint probabilities
   for (int i = 0; i < n; i++) {

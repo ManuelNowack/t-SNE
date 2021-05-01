@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <tsne/debug.h>
 #include <tsne/matrix.h>
 
 Matrix load_matrix(const char *filepath) {
@@ -10,8 +11,8 @@ Matrix load_matrix(const char *filepath) {
   // open file
   FILE *in_file = fopen(filepath, "r");
   if (in_file == NULL) {
-    printf("Could not load matrix from filepath %s\n", filepath);
-    exit(-1);
+    throw std::runtime_error(
+        std::string("Could not load matrix from filepath ") + filepath);
   }
 
   // determine matrix dimension
@@ -37,10 +38,10 @@ Matrix load_matrix(const char *filepath) {
     if (character == '\n') {
       // check if row contains as many elements as required
       if (counter != A.ncols) {
-        printf(
-            "Error: Invalid number of elements in row %d. %d instad of %d.\n",
-            A.nrows, counter, A.ncols);
-        exit(-1);
+        throw std::runtime_error(
+            std::string("Error: Invalid number of elements in row ") +
+            std::to_string(A.nrows) + ": " + std::to_string(counter) +
+            " instad of " + std::to_string(A.ncols));
       }
       counter = 0;
       A.nrows++;
@@ -50,8 +51,7 @@ Matrix load_matrix(const char *filepath) {
   // load data
   A.data = (double *)malloc(A.nrows * A.ncols * sizeof(double));
   if (!A.data) {
-    printf("Error: Could not allocate memory to store matrix.\n");
-    exit(-1);
+    throw std::runtime_error("Could not allocate memory to store matrix.");
   }
   rewind(in_file);
   int i = 0;
@@ -62,7 +62,7 @@ Matrix load_matrix(const char *filepath) {
   } while (character != EOF);
   fclose(in_file);
 
-  printf("Matrix of dimension %d x %d loaded.\n", A.nrows, A.ncols);
+  DEBUG("Matrix of dimension " << A.nrows << " x " << A.ncols << " loaded");
 
   return A;
 }
@@ -73,6 +73,11 @@ void store_matrix(const char *filepath, Matrix A) {
    */
 
   FILE *out_file = fopen(filepath, "w");
+
+  if (out_file == NULL) {
+    throw std::runtime_error(
+        std::string("Could not store matrix to filepath ") + filepath);
+  }
 
   int n = A.nrows;
   int m = A.ncols;
@@ -92,14 +97,12 @@ Matrix create_matrix(int nrows, int ncols) {
               .ncols = ncols,
               .data = (double *)malloc(nrows * ncols * sizeof(double))};
   if (!A.data) {
-    printf("Error: Could not allocate memory for matrix.\n");
-    exit(-1);
+    throw std::runtime_error("Could not allocate memory for matrix.");
   }
 
   return A;
 }
 
 void assert_finite_matrix(Matrix A) {
-  printf("assert_finite_matrix not implemented.\n");
-  exit(-1);
+  throw std::runtime_error("assert_finite_matrix not implemented.");
 }
