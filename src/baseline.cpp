@@ -99,17 +99,15 @@ void joint_probs_baseline(const Matrix& X, Matrix& P, Matrix& D) {
     double precision_max = HUGE_VAL;
     double* distances = &D.data[i * n];
     double* probabilities = &P.data[i * n];
-    double actual_log_perplexity, normalizer;
-    calc_log_perplexity(distances, probabilities, n, i, precisions[i],
-                        &actual_log_perplexity, &normalizer);
 
-    // bisection method until suitable precision is found or maximum number of
-    // tries has been reached
-    int tries = 0;
-    double diff = actual_log_perplexity - target_log_perplexity;
+    // bisection method for a fixed number of iterations
+    double actual_log_perplexity, normalizer, diff;
+    for (int iter=0; iter<kJointProbsMaxIter; iter++) {
 
-    // TODO(fgabriel): Consider fixed numbers of trials.
-    while (fabs(diff) > kPerplexityTolerance && tries < kJointProbsMaxIter) {
+      calc_log_perplexity(distances, probabilities, n, i, precisions[i],
+                          &actual_log_perplexity, &normalizer);
+      diff = actual_log_perplexity - target_log_perplexity;
+
       if (diff > 0) {
         // precision should be increased
         precision_min = precisions[i];
@@ -126,14 +124,6 @@ void joint_probs_baseline(const Matrix& X, Matrix& P, Matrix& D) {
         } else {
           precisions[i] = 0.5 * (precisions[i] + precision_min);
         }
-      }
-
-      // calculate new log perplexity
-      tries++;
-      if (tries < 50) {
-        calc_log_perplexity(distances, probabilities, n, i, precisions[i],
-                            &actual_log_perplexity, &normalizer);
-        diff = actual_log_perplexity - target_log_perplexity;
       }
     }
 
