@@ -10,6 +10,11 @@ To run the benchmark:
 build/bin/benchmark <path_to_X_PCA> <path_to_Y_INIT>
 ```
 
+To run the benchmark for different numbers of samples
+```shell
+build/bin/benchmark_full <path_to_X_PCA> <path_to_Y_INIT> <log2_of_min_samples> <log2_of_max_samples>
+```
+
 To enable debug output:
 ```shell
 cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
