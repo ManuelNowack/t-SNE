@@ -13,19 +13,19 @@ typedef void grad_desc_func_t(Matrix& Y, tsne_var_t& var, int n, int n_dim,
                               double momentum);
 
 template <class T>
-class FuncResitry {
+class FuncRegistry {
  public:
   std::vector<T*> funcs;
   std::vector<std::string> func_names;
   int num_funcs = 0;
 
   // Constraints on the singleton.
-  FuncResitry(FuncResitry const&) = delete;
+  FuncRegistry(FuncResitry const&) = delete;
   void operator=(FuncResitry const&) = delete;
 
   // Get the single instance of the FunctionRegistry.
-  static FuncResitry& get_instance() {
-    static FuncResitry instance;
+  static FuncRegistry& get_instance() {
+    static FuncRegistry instance;
     return instance;
   }
 
@@ -38,7 +38,7 @@ class FuncResitry {
   }
 
  private:
-  FuncResitry(){};
+  FuncRegistry(){};
 };
 
 // Called by the driver to register your functions.

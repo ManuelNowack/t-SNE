@@ -70,7 +70,7 @@ void destroy_tsne_variables(tsne_var_t &var) {
 // for the given tsne function.
 double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -120,7 +120,7 @@ double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
 // for the given joint probabilities function.
 double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -166,7 +166,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
 double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
                            const Matrix &X, Matrix &Y) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -220,10 +220,10 @@ int main(int argc, char **argv) {
   Matrix Y = load_matrix(argv[2]);
 
   register_functions();
-  auto &tsne_func_registry = FuncResitry<tsne_func_t>::get_instance();
+  auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
-      FuncResitry<joint_probs_func_t>::get_instance();
-  auto &grad_desc_func_registry = FuncResitry<grad_desc_func_t>::get_instance();
+      FuncRegistry<joint_probs_func_t>::get_instance();
+  auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
 
   // TODO(mrettenba): Check validity of functions.
 

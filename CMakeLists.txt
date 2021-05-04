@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Compiler flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fno-tree-vectorize -march=skylake")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fno-tree-vectorize -march=skylake -m64 -Wall")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG_BUILD)
 endif()

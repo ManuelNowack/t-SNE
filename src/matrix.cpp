@@ -3,10 +3,10 @@
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
+/*
+* Load data in text file at filepath into Matrix structure.
+*/
 Matrix load_matrix(const char *filepath) {
-  /*
-   * Load data in text file at filepath into Matrix structure.
-   */
 
   // open file
   FILE *in_file = fopen(filepath, "r");
@@ -67,10 +67,10 @@ Matrix load_matrix(const char *filepath) {
   return A;
 }
 
+/*
+* Store matrix A into a text file at filepath.
+*/
 void store_matrix(const char *filepath, Matrix A) {
-  /*
-   * Store matrix A into a text file at filepath.
-   */
 
   FILE *out_file = fopen(filepath, "w");
 
