@@ -26,3 +26,6 @@ add_subdirectory(src)
 
 # The benchmark executable code.
 add_subdirectory(benchmark)
+
+# test subdirectory
+add_subdirectory(testing)

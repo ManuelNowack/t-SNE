@@ -106,3 +106,12 @@ Matrix create_matrix(int nrows, int ncols) {
 void assert_finite_matrix(Matrix A) {
   throw std::runtime_error("assert_finite_matrix not implemented.");
 }
+
+void copy_matrix(Matrix *orig, Matrix *copy){
+  copy->ncols = orig->ncols;
+  copy->nrows = orig->nrows;
+  copy->data = (double *)malloc(copy->nrows*copy->ncols*sizeof(double));
+  if (copy->data) {
+    throw std::runtime_error("Could not allocate memory for matrix.");
+  }
+}

@@ -21,6 +21,7 @@ typedef struct {
 Matrix load_matrix(const char *filepath);
 void store_matrix(const char *filepath, Matrix A);
 Matrix create_matrix(int nrows, int ncols);
+void copy_matrix(Matrix *orig, Matrix *copy);
 void assert_finite_matrix(Matrix A);
 
 #endif

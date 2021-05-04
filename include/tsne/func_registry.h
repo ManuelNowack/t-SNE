@@ -20,8 +20,8 @@ class FuncRegistry {
   int num_funcs = 0;
 
   // Constraints on the singleton.
-  FuncRegistry(FuncResitry const&) = delete;
-  void operator=(FuncResitry const&) = delete;
+  FuncRegistry(FuncRegistry const&) = delete;
+  void operator=(FuncRegistry const&) = delete;
 
   // Get the single instance of the FunctionRegistry.
   static FuncRegistry& get_instance() {
