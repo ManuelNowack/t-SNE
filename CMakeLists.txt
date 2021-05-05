@@ -29,3 +29,6 @@ add_subdirectory(benchmark)
 
 # test subdirectory
 add_subdirectory(testing)
+
+# The profiling executable code.
+add_subdirectory(profiling)

@@ -27,8 +27,8 @@
  *  along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <tsne/benchmark.h>
 #include <tsne/func_registry.h>
-#include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
 #include <iostream>
@@ -40,184 +40,50 @@
 
 using namespace std;
 
-#define CYCLES_REQUIRED (1 * 1e8)
-#define REP 5  // 50
-
-// Create intermediate t-SNE variables.
-void create_tsne_variables(tsne_var_t &var, int n, int n_dim) {
-  var.P = create_matrix(n, n);
-  var.Q = create_matrix(n, n);
-  var.Q_numerators = create_matrix(n, n);
-  var.grad_Y = create_matrix(n, n_dim);
-  var.Y_delta = create_matrix(n, n_dim);
-  var.tmp = create_matrix(n, n);
-  var.gains = create_matrix(n, n_dim);
-  var.D = create_matrix(n, n);
-}
-
-void destroy_tsne_variables(tsne_var_t &var) {
-  free(var.P.data);
-  free(var.Q.data);
-  free(var.Q_numerators.data);
-  free(var.grad_Y.data);
-  free(var.Y_delta.data);
-  free(var.tmp.data);
-  free(var.gains.data);
-  free(var.D.data);
-}
-
-// Computes and reports the number of cycles required per iteration
-// for the given tsne function.
-double perf_test_tsne(tsne_func_t *f, Matrix &X, Matrix &Y) {
-  double cycles = 0.;
-  size_t num_runs = 1;
-  double multiplier = 1;
-  uint64_t start, end;
-
-  int n = X.nrows;
-  const int n_dim = 2;
-  tsne_var_t var;
-  create_tsne_variables(var, n, n_dim);
-
-  // Warm-up phase: we determine a number of executions that allows
-  // the code to be executed for at least CYCLES_REQUIRED cycles.
-  // This helps excluding timing overhead when measuring small runtimes.
-  do {
-    num_runs = num_runs * multiplier;
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; i++) {
-      f(&X, &Y, &var, n_dim);
-    }
-    end = stop_tsc(start);
-
-    cycles = (double)end;
-    multiplier = (CYCLES_REQUIRED) / (cycles);
-
-  } while (multiplier > 2);
-
-  // Actual performance measurements repeated REP times.
-  // We simply store all results and compute medians during post-processing.
-  double total_cycles = 0;
-  for (size_t j = 0; j < REP; j++) {
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; ++i) {
-      f(&X, &Y, &var, n_dim);
-    }
-    end = stop_tsc(start);
-
-    cycles = ((double)end) / num_runs;
-    total_cycles += cycles;
-  }
-  total_cycles /= REP;
-
-  cycles = total_cycles;
-  destroy_tsne_variables(var);
-
-  return cycles;
-}
-
-// Computes and reports the number of cycles required per iteration
-// for the given joint probabilities function.
-double perf_test_joint_probs(joint_probs_func_t *f, Matrix &X) {
-  double cycles = 0.;
-  size_t num_runs = 1;
-  double multiplier = 1;
-  uint64_t start, end;
-
-  int n = X.nrows;
-  const int n_dim = 2;
-  tsne_var_t var;
-  create_tsne_variables(var, n, n_dim);
-
-  do {
-    num_runs = num_runs * multiplier;
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; i++) {
-      f(&X, &var.P, &var.D);
-    }
-    end = stop_tsc(start);
-
-    cycles = (double)end;
-    multiplier = (CYCLES_REQUIRED) / (cycles);
-
-  } while (multiplier > 2);
-
-  double total_cycles = 0;
-  for (size_t j = 0; j < REP; j++) {
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; ++i) {
-      f(&X, &var.P, &var.D);
-    }
-    end = stop_tsc(start);
-
-    cycles = ((double)end) / num_runs;
-    total_cycles += cycles;
-  }
-  total_cycles /= REP;
-
-  cycles = total_cycles;
-  destroy_tsne_variables(var);
-
-  return cycles;
-}
-
-// Computes and reports the number of cycles required per iteration
-// for the given joint probabilities function.
-double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
-                           Matrix &X, Matrix &Y) {
-  double cycles = 0.;
-  size_t num_runs = 1;
-  double multiplier = 1;
-  uint64_t start, end;
-
-  int n = X.nrows;
-  const int n_dim = 2;
-  tsne_var_t var;
-  create_tsne_variables(var, n, n_dim);
-
-  // Populate the joint probability matrix.
-  joint_probs(&X, &var.P, &var.D);
-
-  do {
-    num_runs = num_runs * multiplier;
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; i++) {
-      f(&Y, &var, n, n_dim, kFinalMomentum);
-    }
-    end = stop_tsc(start);
-
-    cycles = (double)end;
-    multiplier = (CYCLES_REQUIRED) / (cycles);
-
-  } while (multiplier > 2);
-
-  double total_cycles = 0;
-  for (size_t j = 0; j < REP; j++) {
-    start = start_tsc();
-    for (size_t i = 0; i < num_runs; ++i) {
-      f(&Y, &var, n, n_dim, kFinalMomentum);
-    }
-    end = stop_tsc(start);
-
-    cycles = ((double)end) / num_runs;
-    total_cycles += cycles;
-  }
-  total_cycles /= REP;
-
-  cycles = total_cycles;
-  destroy_tsne_variables(var);
-
-  return cycles;
-}
-
 int main(int argc, char **argv) {
-  if (argc < 3) {
-    cerr << "Usage: " << argv[0] << " X_PCA Y_INIT" << endl;
+  if (argc != 3 && argc != 5) {
+    cerr << "Usage: " << argv[0] << " X_PCA Y_INIT [MIN MAX]" << endl;
+    cerr << "If MIN and MAX are not defined, benchmark for full dataset." << endl;
+    cerr << "Otherwise, benchmark from 2^MIN up to 2^MAX samples with multiplicative steps of 2." << endl;
     return 1;
   }
 
   Matrix X = load_matrix(argv[1]);
   Matrix Y = load_matrix(argv[2]);
+
+  // Determine number of samples used for benchmarking
+  int n_measurements;
+  int log2_min_samples, log2_max_samples;
+  if (argc == 3) {
+    // All samples only
+    n_measurements = 1;
+  } else {
+    // Different numbers of samples
+    log2_min_samples = atoi(argv[3]);
+    log2_max_samples = atoi(argv[4]);
+    if (log2_min_samples > log2_max_samples || log2_min_samples < 0 || log2_max_samples < 0) {
+      cerr << "Invalid sample bounds: MIN=" << log2_min_samples << ", MAX=" << log2_max_samples << endl;
+      return 1;
+    }
+    if (X.nrows < powl(2, log2_max_samples)) {
+      cerr << "Maximum number of samples (2^" << log2_max_samples
+      << " = " << (int)powl(2, log2_max_samples)
+      << ") is higher than the number of samples in the dataset provided ("
+      << X.nrows << ")" << endl;
+      return 1;
+    }
+    n_measurements = log2_max_samples - log2_min_samples + 1;
+  }
+
+  // Create array of sample numbers
+  int n_samples_values[n_measurements];
+  if (argc == 3) {
+    n_samples_values[0] = X.nrows;
+  } else {
+    for (int i=0; i<n_measurements; i++) {
+      n_samples_values[i] = (int)powl(2, log2_min_samples+i);
+    }
+  }
 
   register_functions();
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
@@ -227,23 +93,70 @@ int main(int argc, char **argv) {
 
   // TODO(mrettenba): Check validity of functions.
 
-  double perf;
+  int n_measurement_series = tsne_func_registry.num_funcs + joint_probs_func_registry.num_funcs + grad_desc_func_registry.num_funcs;
+  double performances[n_measurements][n_measurement_series];
+
+  for (int i_measurement=0; i_measurement<n_measurements; i_measurement++) {
+    cout << n_samples_values[i_measurement] << " samples" << endl;
+
+    int n_samples = n_samples_values[i_measurement];
+    Matrix X_sub = {.nrows = n_samples, .ncols = X.ncols, .data = X.data};
+    Matrix Y_sub = {.nrows = n_samples, .ncols = Y.ncols, .data = Y.data};
+
+    int i_series = 0;
+
+    double perf;
+    for (int i = 0; i < tsne_func_registry.num_funcs; i++) {
+      perf = perf_test_tsne(tsne_func_registry.funcs[i], X_sub, Y_sub);
+      cout << tsne_func_registry.func_names[i] << "," << perf << endl;
+      performances[i_measurement][i_series] = perf;
+      i_series++;
+    }
+
+    for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
+      perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X_sub);
+      cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
+      performances[i_measurement][i_series] = perf;
+      i_series++;
+    }
+
+    // Pick one joint_probs implementation to populate the variables.
+    auto joint_probs = joint_probs_func_registry.funcs[0];
+    for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
+      perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs, X_sub,
+                                 Y_sub);
+      cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
+      performances[i_measurement][i_series] = perf;
+      i_series++;
+    }
+    
+    cout << endl;
+  }
+
   for (int i = 0; i < tsne_func_registry.num_funcs; i++) {
-    perf = perf_test_tsne(tsne_func_registry.funcs[i], X, Y);
-    cout << tsne_func_registry.func_names[i] << "," << perf << endl;
+    cout << tsne_func_registry.func_names[i] << ", ";
   }
-
   for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
-    perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X);
-    cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
+    cout << joint_probs_func_registry.func_names[i] << ", ";
+  }
+  for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
+    cout << grad_desc_func_registry.func_names[i];
+    if (i == grad_desc_func_registry.num_funcs-1) {
+      cout << endl;
+    } else {
+      cout << ", ";
+    }
   }
 
-  // Pick one joint_probs implementation to populate the variables.
-  auto joint_probs = joint_probs_func_registry.funcs[0];
-  for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
-    perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs, X,
-                               Y);
-    cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
+  for (int i=0; i<n_measurements; i++) {
+    for (int j=0; j<n_measurement_series; j++) {
+      cout << performances[i][j];
+      if (j == n_measurement_series-1) {
+        cout << endl;
+      } else {
+        cout << ", ";
+      }
+    }
   }
 
   return 0;
