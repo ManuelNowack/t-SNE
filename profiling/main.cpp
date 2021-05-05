@@ -5,7 +5,7 @@
 
 #define REP 5
 
-void tsne_baseline(const Matrix& X, Matrix& Y, tsne_var_t& var, int n_dim);
+void tsne_baseline(Matrix *X, Matrix *Y, tsne_var_t *var, int n_dim);
 
 void create_tsne_variables(tsne_var_t &var, int n, int n_dim) {
   var.P = create_matrix(n, n);
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   create_tsne_variables(var, n, n_dim);
 
   for (int i = 0; i < REP; ++i) {
-    tsne_baseline(X, Y, var, n_dim);
+    tsne_baseline(&X, &Y, &var, n_dim);
 
   }
   destroy_tsne_variables(var);

@@ -1,10 +1,12 @@
-#include <float.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <tsne/debug.h>
-#include <tsne/hyperparams.h>
-#include <tsne/matrix.h>
+#include "base.h"
+
+/**
+ * Holds the ground truth function which further implementations of the respective
+ * functions will be compared to.
+ * 
+*/
+
+
 
 /*
 * Calculate pairwise squared Euclidean distances.
@@ -73,7 +75,7 @@ void calc_log_perplexity(double* distances, double* probabilities, int n, int k,
 }
 
 /*
-* calculates mean standard-deviation
+* calculates mean standard-deviation, used for debugging only
 */
 double calculate_mean_stddev(double *precisions, int n){
   double sum = 0;

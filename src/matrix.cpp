@@ -3,10 +3,10 @@
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
+/*
+* Load data in text file at filepath into Matrix structure.
+*/
 Matrix load_matrix(const char *filepath) {
-  /*
-   * Load data in text file at filepath into Matrix structure.
-   */
 
   // open file
   FILE *in_file = fopen(filepath, "r");
@@ -67,10 +67,10 @@ Matrix load_matrix(const char *filepath) {
   return A;
 }
 
+/*
+* Store matrix A into a text file at filepath.
+*/
 void store_matrix(const char *filepath, Matrix A) {
-  /*
-   * Store matrix A into a text file at filepath.
-   */
 
   FILE *out_file = fopen(filepath, "w");
 
@@ -105,4 +105,13 @@ Matrix create_matrix(int nrows, int ncols) {
 
 void assert_finite_matrix(Matrix A) {
   throw std::runtime_error("assert_finite_matrix not implemented.");
+}
+
+void copy_matrix(Matrix *orig, Matrix *copy){
+  copy->ncols = orig->ncols;
+  copy->nrows = orig->nrows;
+  copy->data = (double *)malloc(copy->nrows*copy->ncols*sizeof(double));
+  if (copy->data) {
+    throw std::runtime_error("Could not allocate memory for matrix.");
+  }
 }

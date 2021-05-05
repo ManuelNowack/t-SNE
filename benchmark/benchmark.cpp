@@ -30,9 +30,9 @@ void destroy_tsne_variables(tsne_var_t &var) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given tsne function.
-double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
+double perf_test_tsne(tsne_func_t *f, Matrix &X, Matrix &Y) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -48,7 +48,7 @@ double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
     num_runs = num_runs * multiplier;
     start = start_tsc();
     for (size_t i = 0; i < num_runs; i++) {
-      f(X, Y, var, n_dim);
+      f(&X, &Y, &var, n_dim);
     }
     end = stop_tsc(start);
 
@@ -63,7 +63,7 @@ double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
   for (size_t j = 0; j < REP; j++) {
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
-      f(X, Y, var, n_dim);
+      f(&X, &Y, &var, n_dim);
     }
     end = stop_tsc(start);
 
@@ -80,9 +80,9 @@ double perf_test_tsne(tsne_func_t *f, const Matrix &X, Matrix &Y) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
-double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
+double perf_test_joint_probs(joint_probs_func_t *f, Matrix &X) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -95,7 +95,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
     num_runs = num_runs * multiplier;
     start = start_tsc();
     for (size_t i = 0; i < num_runs; i++) {
-      f(X, var.P, var.D);
+      f(&X, &var.P, &var.D);
     }
     end = stop_tsc(start);
 
@@ -108,7 +108,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
   for (size_t j = 0; j < REP; j++) {
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
-      f(X, var.P, var.D);
+      f(&X, &var.P, &var.D);
     }
     end = stop_tsc(start);
 
@@ -126,9 +126,9 @@ double perf_test_joint_probs(joint_probs_func_t *f, const Matrix &X) {
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
 double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
-                           const Matrix &X, Matrix &Y) {
+                           Matrix &X, Matrix &Y) {
   double cycles = 0.;
-  long num_runs = 1;
+  size_t num_runs = 1;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -138,13 +138,13 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
   create_tsne_variables(var, n, n_dim);
 
   // Populate the joint probability matrix.
-  joint_probs(X, var.P, var.D);
+  joint_probs(&X, &var.P, &var.D);
 
   do {
     num_runs = num_runs * multiplier;
     start = start_tsc();
     for (size_t i = 0; i < num_runs; i++) {
-      f(Y, var, n, n_dim, kFinalMomentum);
+      f(&Y, &var, n, n_dim, kFinalMomentum);
     }
     end = stop_tsc(start);
 
@@ -157,7 +157,7 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
   for (size_t j = 0; j < REP; j++) {
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
-      f(Y, var, n, n_dim, kFinalMomentum);
+      f(&Y, &var, n, n_dim, kFinalMomentum);
     }
     end = stop_tsc(start);
 

@@ -86,10 +86,10 @@ int main(int argc, char **argv) {
   }
 
   register_functions();
-  auto &tsne_func_registry = FuncResitry<tsne_func_t>::get_instance();
+  auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
-      FuncResitry<joint_probs_func_t>::get_instance();
-  auto &grad_desc_func_registry = FuncResitry<grad_desc_func_t>::get_instance();
+      FuncRegistry<joint_probs_func_t>::get_instance();
+  auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
 
   // TODO(mrettenba): Check validity of functions.
 
