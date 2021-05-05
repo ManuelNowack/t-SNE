@@ -26,3 +26,6 @@ add_subdirectory(src)
 
 # The benchmark executable code.
 add_subdirectory(benchmark)
+
+# The profiling executable code.
+add_subdirectory(profiling)
