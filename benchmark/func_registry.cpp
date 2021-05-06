@@ -10,11 +10,16 @@ joint_probs_func_t joint_probs_baseline;
 // Put all grad_desc function declarations here.
 grad_desc_func_t grad_desc_baseline;
 
+// Put all euclidean_dist function declarations here:
+euclidean_dist_func_t euclidean_dist_baseline;
+
 void register_functions() {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
       FuncRegistry<joint_probs_func_t>::get_instance();
   auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
+  auto &euclidean_dist_func_registry =
+      FuncRegistry<euclidean_dist_func_t>::get_instance();
 
   // Put all tsne functions to test here.
   tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
@@ -26,4 +31,8 @@ void register_functions() {
   // Put all grad_desc functions to test here.
   grad_desc_func_registry.add_function(&grad_desc_baseline,
                                        "grad_desc_baseline");
+
+  // Put all euclidean_dist functions to test here.
+  euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
+                                            "euclidean_dist_baseline");
 }

@@ -94,12 +94,15 @@ int main(int argc, char **argv) {
       FuncRegistry<joint_probs_func_t>::get_instance();
   auto &grad_desc_func_registry =
       FuncRegistry<grad_desc_func_t>::get_instance();
+  auto &euclidean_dist_func_registry =
+      FuncRegistry<euclidean_dist_func_t>::get_instance();
 
   // TODO(mrettenba): Check validity of functions.
 
   int n_measurement_series = tsne_func_registry.num_funcs +
                              joint_probs_func_registry.num_funcs +
-                             grad_desc_func_registry.num_funcs;
+                             grad_desc_func_registry.num_funcs +
+                             euclidean_dist_func_registry.num_funcs;
   double performances[n_measurements][n_measurement_series];
 
   for (int i_measurement = 0; i_measurement < n_measurements; i_measurement++) {
@@ -136,6 +139,14 @@ int main(int argc, char **argv) {
       i_series++;
     }
 
+    // Benchmark euclidean_dist functions
+    for (int i = 0; i < euclidean_dist_func_registry.num_funcs; i++) {
+      perf = perf_test_euclidean_dist(euclidean_dist_func_registry.funcs[i], X_sub);
+      cout << euclidean_dist_func_registry.func_names[i] << "," << perf << endl;
+      performances[i_measurement][i_series] = perf;
+      i_series++;
+    }
+    
     cout << endl;
   }
 
@@ -146,8 +157,11 @@ int main(int argc, char **argv) {
     cout << joint_probs_func_registry.func_names[i] << ", ";
   }
   for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
-    cout << grad_desc_func_registry.func_names[i];
-    if (i == grad_desc_func_registry.num_funcs - 1) {
+    cout << grad_desc_func_registry.func_names[i] << ", ";
+  }
+  for (int i = 0; i < euclidean_dist_func_registry.num_funcs; i++) {
+    cout << euclidean_dist_func_registry.func_names[i];
+    if (i == euclidean_dist_func_registry.num_funcs-1) {
       cout << endl;
     } else {
       cout << ", ";
