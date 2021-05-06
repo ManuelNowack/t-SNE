@@ -11,6 +11,7 @@ typedef void tsne_func_t(Matrix *X, Matrix *Y, tsne_var_t *var,
 typedef void joint_probs_func_t(Matrix *X, Matrix *P, Matrix *D);
 typedef void grad_desc_func_t(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                               double momentum);
+typedef void euclidean_dist_func_t(Matrix *X, Matrix *D);
 
 template <class T>
 class FuncRegistry {
