@@ -26,7 +26,7 @@ static void test_calc_squared_euclid_dist(void (*new_f)(Matrix *, Matrix *), Mat
     copy_matrix(D, &D_new);
     copy_matrix(X, &X_new);
 
-    calc_squared_euclidean_distances(X, D);
+    euclidean_dist_baseline(X, D);
     new_f(&X_new, &D_new);
 
     int ok;

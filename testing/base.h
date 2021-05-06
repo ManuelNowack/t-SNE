@@ -19,7 +19,7 @@
 * Squared Euclidean distances are stored in D, whose data field is expected
 * to be suitably initialised with sufficient size.
 */
-void calc_squared_euclidean_distances(Matrix *X, Matrix *D);
+void euclidean_dist_baseline(Matrix *X, Matrix *D);
 
 /*
 * Calculate the log perplexity H for sample k for the given distances to the

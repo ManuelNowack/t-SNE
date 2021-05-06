@@ -13,7 +13,7 @@
 * Squared Euclidean distances are stored in D, whose data field is expected
 * to be suitably initialised with sufficient size.
 */
-void calc_squared_euclidean_distances(Matrix *X, Matrix *D) {
+void euclidean_dist_baseline(Matrix *X, Matrix *D) {
 
   int n = X->nrows;
   int m = X->ncols;
@@ -95,7 +95,7 @@ void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
 
   int n = X->nrows;
 
-  calc_squared_euclidean_distances(X, D);
+  euclidean_dist_baseline(X, D);
 
   double target_log_perplexity = log(kPerplexityTarget);
 
@@ -177,7 +177,7 @@ void calc_affinities(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  calc_squared_euclidean_distances(Y, D);
+  euclidean_dist_baseline(Y, D);
 
   // unnormalised perplexities
   double sum = 0;
