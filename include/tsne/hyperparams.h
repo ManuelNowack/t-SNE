@@ -1,7 +1,7 @@
 #ifndef TSNE_HYPERPARAMS_H_
 #define TSNE_HYPERPARAMS_H_
 
-constexpr int kGradDescMaxIter = 10;  // 1000;
+constexpr int kGradDescMaxIter = 100;
 constexpr int kJointProbsMaxIter = 50;
 constexpr double kInitialMomentum = 0.5;
 constexpr double kFinalMomentum = 0.8;
