@@ -12,6 +12,9 @@ grad_desc_func_t grad_desc_baseline;
 
 // Put all euclidean_dist function declarations here:
 euclidean_dist_func_t euclidean_dist_baseline;
+euclidean_dist_func_t euclidean_dist_unroll2;
+euclidean_dist_func_t euclidean_dist_unroll4;
+euclidean_dist_func_t euclidean_dist_unroll8;
 
 void register_functions() {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
@@ -33,6 +36,8 @@ void register_functions() {
                                        "grad_desc_baseline");
 
   // Put all euclidean_dist functions to test here.
-  euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
-                                            "euclidean_dist_baseline");
+  euclidean_dist_func_registry.add_function(&euclidean_dist_baseline, "euclidean_dist_baseline");
+  euclidean_dist_func_registry.add_function(&euclidean_dist_unroll2, "euclidean_dist_unroll2");
+  euclidean_dist_func_registry.add_function(&euclidean_dist_unroll4, "euclidean_dist_unroll4");
+  euclidean_dist_func_registry.add_function(&euclidean_dist_unroll8, "euclidean_dist_unroll8");
 }
