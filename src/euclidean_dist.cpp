@@ -135,3 +135,140 @@ void euclidean_dist_unroll8(Matrix *X, Matrix *D) {
     D->data[i * n + i] = 0.0;
   }
 }
+
+/*
+* Blocking for point dimensions
+*/
+void euclidean_dist_block8(Matrix *X, Matrix *D) {
+
+  int n = X->nrows;
+  int m = X->ncols;
+
+  // initialize distances of upper diagonal elements to 0
+  for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+      D->data[i * n + j] = 0;
+    }
+  }
+
+  int block_size = 4*8;
+  // calculate non-diagonal entries
+  int k = 0;
+  for (; k < (m/block_size)*block_size; k+=block_size) {
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        // Euclidean distance
+        double sum = 0;
+        for (int kk = k; kk < k+block_size; kk++) {
+          double dist = X->data[i * m + kk] - X->data[j * m + kk];
+          sum += dist * dist;
+        }
+        D->data[i * n + j] += sum;
+      }
+    }
+  }
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      // Euclidean distance
+      double sum = 0;
+      for (int kk = k; kk < m; kk++) {
+        double dist = X->data[i * m + kk] - X->data[j * m + kk];
+        sum += dist * dist;
+      }
+      D->data[i * n + j] += sum;
+    }
+  }
+
+  // set distances of lower diagonal elements
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < i; j++) {
+      D->data[i * n + j] = D->data[j * n + i];
+    }
+  }
+}
+
+/*
+* Blocking for point dimensions and points
+*/
+void euclidean_dist_block8x8(Matrix *X, Matrix *D) {
+
+  int n = X->nrows;
+  int m = X->ncols;
+
+  // initialize distances of upper diagonal elements to 0
+  for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+      D->data[i * n + j] = 0;
+    }
+  }
+
+  int block_size_1 = 8; // number of samples in block
+  int block_size_2 = 8; // number of dimensions in block
+  int i = 0;
+  for (; i < (n/block_size_1)*block_size_1; i+=block_size_1) {
+    int j = i;
+    for (; j < (n/block_size_1)*block_size_1; j+=block_size_1) {
+      int k = 0;
+      for (; k < (m/block_size_2)*block_size_2; k+=block_size_2) {
+
+        for (int ii = i; ii < i+block_size_1; ii++) {
+          int jj = (ii+1 > j) ? ii+1 : j;
+          for (; jj < j+block_size_1; jj++) {
+            double sum = 0;
+            for (int kk = k; kk < k+block_size_2; kk++) {
+              double dist = X->data[ii * m + kk] - X->data[jj * m + kk];
+              sum += dist*dist;
+            }
+            D->data[ii * n + jj] += sum;
+          }
+        }
+      }
+
+      // remaining dimensions of points
+      for (int ii = i; ii < i+block_size_1; ii++) {
+        int jj = (ii+1 > j) ? ii+1 : j;
+        for (; jj < j+block_size_1; jj++) {
+          double sum = 0;
+          for (int kk = k; kk < m; kk++) {
+            double dist = X->data[ii * m + kk] - X->data[jj * m + kk];
+            sum += dist*dist;
+          }
+          D->data[ii * n + jj] += sum;
+        }
+      }
+    }
+
+    // remaining columns of D
+    for (int ii = i; ii < i+block_size_1; ii++) {
+      int jj = (ii+1 > j) ? ii+1 : j;
+      for (; jj < n; jj++) {
+        double sum = 0;
+        for (int kk = 0; kk < m; kk++) {
+          double dist = X->data[ii * m + kk] - X->data[jj * m + kk];
+          sum += dist*dist;
+        }
+        D->data[ii * n + jj] += sum;
+      }
+    }
+  }
+
+  // remaining elements
+  for (; i < n; i++) {
+    for (int j = i+1; j < n; j++) {
+      double sum = 0;
+      for (int k = 0; k < m; k++) {
+        double dist = X->data[i * m + k] - X->data[j * m + k];
+        sum += dist*dist;
+      }
+      D->data[i * n + j] += sum;
+    }
+  }
+
+
+  // set distances of lower diagonal elements
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < i; j++) {
+      D->data[i * n + j] = D->data[j * n + i];
+    }
+  }
+}
