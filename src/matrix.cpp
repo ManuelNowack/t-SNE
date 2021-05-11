@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
@@ -110,8 +111,10 @@ void assert_finite_matrix(Matrix A) {
 void copy_matrix(Matrix *orig, Matrix *copy){
   copy->ncols = orig->ncols;
   copy->nrows = orig->nrows;
-  copy->data = (double *)malloc(copy->nrows*copy->ncols*sizeof(double));
-  if (copy->data) {
+  size_t datasize = copy->nrows*copy->ncols*sizeof(double);
+  copy->data = (double *)malloc(datasize);
+  memcpy(copy->data, orig->data, datasize);
+  if (!copy->data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
 }
