@@ -40,6 +40,8 @@
 
 using namespace std;
 
+#define FREQUENCY 2'400'000'000
+
 int main(int argc, char **argv) {
   if (argc != 3 && argc != 5) {
     cerr << "Usage: " << argv[0] << " X_PCA Y_INIT [MIN MAX]" << endl;
@@ -91,8 +93,6 @@ int main(int argc, char **argv) {
       FuncRegistry<joint_probs_func_t>::get_instance();
   auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
 
-  // TODO(mrettenba): Check validity of functions.
-
   int n_measurement_series = tsne_func_registry.num_funcs + joint_probs_func_registry.num_funcs + grad_desc_func_registry.num_funcs;
   double performances[n_measurements][n_measurement_series];
 
@@ -105,17 +105,17 @@ int main(int argc, char **argv) {
 
     int i_series = 0;
 
-    double perf;
+    double perf = 0;
     for (int i = 0; i < tsne_func_registry.num_funcs; i++) {
-      perf = perf_test_tsne(tsne_func_registry.funcs[i], X_sub, Y_sub);
-      cout << tsne_func_registry.func_names[i] << "," << perf << endl;
+      //perf = perf_test_tsne(tsne_func_registry.funcs[i], X_sub, Y_sub);
+      //cout << tsne_func_registry.func_names[i] << "," << perf << endl;
       performances[i_measurement][i_series] = perf;
       i_series++;
     }
 
     for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
-      perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X_sub);
-      cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
+      //perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X_sub);
+      //cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
       performances[i_measurement][i_series] = perf;
       i_series++;
     }
@@ -132,13 +132,13 @@ int main(int argc, char **argv) {
     
     cout << endl;
   }
-
+/*
   for (int i = 0; i < tsne_func_registry.num_funcs; i++) {
     cout << tsne_func_registry.func_names[i] << ", ";
   }
   for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
     cout << joint_probs_func_registry.func_names[i] << ", ";
-  }
+  }*/
   for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
     cout << grad_desc_func_registry.func_names[i];
     if (i == grad_desc_func_registry.num_funcs-1) {
@@ -148,9 +148,10 @@ int main(int argc, char **argv) {
     }
   }
 
+//perf is in cycles
   for (int i=0; i<n_measurements; i++) {
     for (int j=0; j<n_measurement_series; j++) {
-      cout << performances[i][j];
+      cout << (performances[i][j]);
       if (j == n_measurement_series-1) {
         cout << endl;
       } else {

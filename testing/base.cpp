@@ -146,7 +146,7 @@ void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
     }
   }
 
-  DEBUG("Mean standard deviation: " << calculate_mean_stddev(precisions, n));
+  //DEBUG("Mean standard deviation: " << calculate_mean_stddev(precisions, n));
 
   // convert conditional probabilties to joint probabilities
   for (int i = 0; i < n; i++) {
