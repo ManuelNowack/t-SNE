@@ -12,6 +12,10 @@ build:
   script:
     - cmake -S . -B build
     - cmake --build build
+  artifacts:
+    paths:
+      - build
+
 
 # run tests using the binary built before
 test:
