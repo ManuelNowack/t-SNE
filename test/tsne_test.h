@@ -1,8 +1,8 @@
 #ifndef TSNE_TEST_H_
 #define TSNE_TEST_H_
 #include <gtest/gtest.h>
-#include <tsne/matrix.h>
 #include <tsne/func_registry.h>
+#include <tsne/matrix.h>
 
 #define PRECISION_ERR (1e-3)
 
@@ -57,8 +57,12 @@ class BaseTest : public testing::Test {
   }
 };
 
-class TsneTest : public BaseTest, public testing::WithParamInterface<tsne_func_t*> {};
-class JointProbsTest : public BaseTest, public testing::WithParamInterface<joint_probs_func_t*> {};
-class GradDescTest : public BaseTest, public testing::WithParamInterface<grad_desc_func_t*> {};
+class TsneTest : public BaseTest,
+                 public testing::WithParamInterface<tsne_func_t *> {};
+class JointProbsTest
+    : public BaseTest,
+      public testing::WithParamInterface<joint_probs_func_t *> {};
+class GradDescTest : public BaseTest,
+                     public testing::WithParamInterface<grad_desc_func_t *> {};
 
 #endif  // TSNE_TEST_H_

@@ -49,6 +49,6 @@ To run the tests
 cmake --build build
 cd build/test && ctest
 ```
-View the test logs at `build/test/Testing/Temporary`, or by adding `--verbose` or `--output-on-failure` flag.
+View the test logs at `build/test/Testing/Temporary`, or by adding `--output-on-failure` flag.
 
 Tip: If you have CMake >=3.20 you can specify the `--test-dir` flag without the initial `cd` command. Otherwise go back to your previous directory with `cd -`.

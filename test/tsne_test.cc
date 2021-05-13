@@ -1,6 +1,5 @@
 #include "tsne_test.h"
 
-#include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
 #include <math.h>
 #include <tsne/hyperparams.h>
