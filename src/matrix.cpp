@@ -1,14 +1,13 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
 /*
-* Load data in text file at filepath into Matrix structure.
-*/
+ * Load data in text file at filepath into Matrix structure.
+ */
 Matrix load_matrix(const char *filepath) {
-
   // open file
   FILE *in_file = fopen(filepath, "r");
   if (in_file == NULL) {
@@ -69,10 +68,9 @@ Matrix load_matrix(const char *filepath) {
 }
 
 /*
-* Store matrix A into a text file at filepath.
-*/
+ * Store matrix A into a text file at filepath.
+ */
 void store_matrix(const char *filepath, Matrix A) {
-
   FILE *out_file = fopen(filepath, "w");
 
   if (out_file == NULL) {
@@ -96,7 +94,7 @@ void store_matrix(const char *filepath, Matrix A) {
 Matrix create_matrix(int nrows, int ncols) {
   Matrix A = {.nrows = nrows,
               .ncols = ncols,
-              .data = (double *)malloc(nrows * ncols * sizeof(double))};
+              .data = (double *)calloc(nrows * ncols, sizeof(double))};
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
@@ -108,10 +106,10 @@ void assert_finite_matrix(Matrix A) {
   throw std::runtime_error("assert_finite_matrix not implemented.");
 }
 
-void copy_matrix(Matrix *orig, Matrix *copy){
+void copy_matrix(Matrix *orig, Matrix *copy) {
   copy->ncols = orig->ncols;
   copy->nrows = orig->nrows;
-  size_t datasize = copy->nrows*copy->ncols*sizeof(double);
+  size_t datasize = copy->nrows * copy->ncols * sizeof(double);
   copy->data = (double *)malloc(datasize);
   memcpy(copy->data, orig->data, datasize);
   if (!copy->data) {

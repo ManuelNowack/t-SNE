@@ -20,7 +20,11 @@ build:
 # run tests using the binary built before
 test:
   stage: test
+  before_script:
+    - apt update && apt -y install cmake
   script:
+    - cmake -S . -B build
+    - cmake --build build
     - build/bin/tsne_test --gtest_output="xml:report.xml"
   artifacts:
       when: always
