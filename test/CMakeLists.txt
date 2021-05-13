@@ -1,6 +1,6 @@
 enable_testing()
 
-add_executable(tsne_test tsne_test.cc)
+add_executable(tsne_test tsne_test.cpp)
 target_link_libraries(tsne_test 
   tsne_library
   gtest_main

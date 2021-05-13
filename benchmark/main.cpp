@@ -36,15 +36,16 @@
 #include <string>
 #include <vector>
 
-#include "tsc_x86.h"
-
 using namespace std;
 
 int main(int argc, char **argv) {
   if (argc != 3 && argc != 5) {
     cerr << "Usage: " << argv[0] << " X_PCA Y_INIT [MIN MAX]" << endl;
-    cerr << "If MIN and MAX are not defined, benchmark for full dataset." << endl;
-    cerr << "Otherwise, benchmark from 2^MIN up to 2^MAX samples with multiplicative steps of 2." << endl;
+    cerr << "If MIN and MAX are not defined, benchmark for full dataset."
+         << endl;
+    cerr << "Otherwise, benchmark from 2^MIN up to 2^MAX samples with "
+            "multiplicative steps of 2."
+         << endl;
     return 1;
   }
 
@@ -61,15 +62,17 @@ int main(int argc, char **argv) {
     // Different numbers of samples
     log2_min_samples = atoi(argv[3]);
     log2_max_samples = atoi(argv[4]);
-    if (log2_min_samples > log2_max_samples || log2_min_samples < 0 || log2_max_samples < 0) {
-      cerr << "Invalid sample bounds: MIN=" << log2_min_samples << ", MAX=" << log2_max_samples << endl;
+    if (log2_min_samples > log2_max_samples || log2_min_samples < 0 ||
+        log2_max_samples < 0) {
+      cerr << "Invalid sample bounds: MIN=" << log2_min_samples
+           << ", MAX=" << log2_max_samples << endl;
       return 1;
     }
     if (X.nrows < powl(2, log2_max_samples)) {
-      cerr << "Maximum number of samples (2^" << log2_max_samples
-      << " = " << (int)powl(2, log2_max_samples)
-      << ") is higher than the number of samples in the dataset provided ("
-      << X.nrows << ")" << endl;
+      cerr << "Maximum number of samples (2^" << log2_max_samples << " = "
+           << (int)powl(2, log2_max_samples)
+           << ") is higher than the number of samples in the dataset provided ("
+           << X.nrows << ")" << endl;
       return 1;
     }
     n_measurements = log2_max_samples - log2_min_samples + 1;
@@ -80,8 +83,8 @@ int main(int argc, char **argv) {
   if (argc == 3) {
     n_samples_values[0] = X.nrows;
   } else {
-    for (int i=0; i<n_measurements; i++) {
-      n_samples_values[i] = (int)powl(2, log2_min_samples+i);
+    for (int i = 0; i < n_measurements; i++) {
+      n_samples_values[i] = (int)powl(2, log2_min_samples + i);
     }
   }
 
@@ -89,14 +92,17 @@ int main(int argc, char **argv) {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
       FuncRegistry<joint_probs_func_t>::get_instance();
-  auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
+  auto &grad_desc_func_registry =
+      FuncRegistry<grad_desc_func_t>::get_instance();
 
   // TODO(mrettenba): Check validity of functions.
 
-  int n_measurement_series = tsne_func_registry.num_funcs + joint_probs_func_registry.num_funcs + grad_desc_func_registry.num_funcs;
+  int n_measurement_series = tsne_func_registry.num_funcs +
+                             joint_probs_func_registry.num_funcs +
+                             grad_desc_func_registry.num_funcs;
   double performances[n_measurements][n_measurement_series];
 
-  for (int i_measurement=0; i_measurement<n_measurements; i_measurement++) {
+  for (int i_measurement = 0; i_measurement < n_measurements; i_measurement++) {
     cout << n_samples_values[i_measurement] << " samples" << endl;
 
     int n_samples = n_samples_values[i_measurement];
@@ -123,13 +129,13 @@ int main(int argc, char **argv) {
     // Pick one joint_probs implementation to populate the variables.
     auto joint_probs = joint_probs_func_registry.funcs[0];
     for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
-      perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs, X_sub,
-                                 Y_sub);
+      perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs,
+                                 X_sub, Y_sub);
       cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
       performances[i_measurement][i_series] = perf;
       i_series++;
     }
-    
+
     cout << endl;
   }
 
@@ -141,17 +147,17 @@ int main(int argc, char **argv) {
   }
   for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
     cout << grad_desc_func_registry.func_names[i];
-    if (i == grad_desc_func_registry.num_funcs-1) {
+    if (i == grad_desc_func_registry.num_funcs - 1) {
       cout << endl;
     } else {
       cout << ", ";
     }
   }
 
-  for (int i=0; i<n_measurements; i++) {
-    for (int j=0; j<n_measurement_series; j++) {
+  for (int i = 0; i < n_measurements; i++) {
+    for (int j = 0; j < n_measurement_series; j++) {
       cout << performances[i][j];
-      if (j == n_measurement_series-1) {
+      if (j == n_measurement_series - 1) {
         cout << endl;
       } else {
         cout << ", ";
