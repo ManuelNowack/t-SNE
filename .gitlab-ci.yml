@@ -21,4 +21,8 @@ build:
 test:
   stage: test
   script:
-    - cd build/test && ctest --output-on-failure
+    - build/bin/tsne_test --gtest_output="xml:report.xml"
+  artifacts:
+      when: always
+      reports:
+        junit: report.xml
