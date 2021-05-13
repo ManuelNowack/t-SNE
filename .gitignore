@@ -25,7 +25,8 @@ build-debug/
 ### VS Code ###
 .vscode/
 
-# Ignore cache folder created by clangd
+# Clangd
+compile-commands.json
 .cache
 
 ### Linux ###
