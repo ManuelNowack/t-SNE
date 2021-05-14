@@ -635,3 +635,247 @@ void euclidean_dist_alt_unroll16(Matrix *X, Matrix *D) {
     D->data[i * n + i] = 0.0;
   }
 }
+
+/*
+* Fill Euclidean distance matrix in 4x4 blocks.
+*/
+void euclidean_dist_alt_block4x4(Matrix *X, Matrix *D) {
+
+  int n = X->nrows;
+  int m = X->ncols;
+
+  const int block_size = 4;
+
+  // Pointer to last row of D
+  Matrix norms = create_matrix(n, 1);
+
+  // Pre-compute squared Euclidean norms
+  for (int i = 0; i < n; i++) {
+    double sum0 = 0;
+    double sum1 = 0;
+    double sum2 = 0;
+    double sum3 = 0;
+    double sum4 = 0;
+    double sum5 = 0;
+    double sum6 = 0;
+    double sum7 = 0;
+    int k = 0;
+    for (; k < 8*(m/8); k+=8) {
+      sum0 += X->data[i * m + k] * X->data[i * m + k];
+      sum1 += X->data[i * m + k + 1] * X->data[i * m + k + 1];
+      sum2 += X->data[i * m + k + 2] * X->data[i * m + k + 2];
+      sum3 += X->data[i * m + k + 3] * X->data[i * m + k + 3];
+      sum4 += X->data[i * m + k + 4] * X->data[i * m + k + 4];
+      sum5 += X->data[i * m + k + 5] * X->data[i * m + k + 5];
+      sum6 += X->data[i * m + k + 6] * X->data[i * m + k + 6];
+      sum7 += X->data[i * m + k + 7] * X->data[i * m + k + 7];
+    }
+    for (; k < m; k++) {
+      double val = X->data[i * m + k];
+      sum0 += val * val;
+    }
+    // Store in last row of D.
+    norms.data[i] = ((sum0 + sum1) + (sum2 + sum3)) + ((sum4 + sum5) + (sum6 + sum7));
+  }
+
+  // Calculate squared Euclidean distances
+  int i_block = 0;
+  for (; i_block < block_size*(n/block_size); i_block += block_size) {
+
+    int j_block = i_block;
+    for (; j_block < block_size*(n/block_size); j_block += block_size) {
+
+      double D_00 = 0;
+      double D_01 = 0;
+      double D_02 = 0;
+      double D_03 = 0;
+
+      double D_10 = 0;
+      double D_11 = 0;
+      double D_12 = 0;
+      double D_13 = 0;
+
+      double D_20 = 0;
+      double D_21 = 0;
+      double D_22 = 0;
+      double D_23 = 0;
+
+      double D_30 = 0;
+      double D_31 = 0;
+      double D_32 = 0;
+      double D_33 = 0;
+
+      for (int k = 0; k < m; k++) {
+        D_00 += X->data[i_block * m + k] * X->data[j_block * m + k];
+        D_01 += X->data[i_block * m + k] * X->data[j_block * m + 1 * m + k];
+        D_02 += X->data[i_block * m + k] * X->data[j_block * m + 2 * m + k];
+        D_03 += X->data[i_block * m + k] * X->data[j_block * m + 3 * m + k];
+
+        D_10 += X->data[i_block * m + 1 * m + k] * X->data[j_block * m + k];
+        D_11 += X->data[i_block * m + 1 * m + k] * X->data[j_block * m + 1 * m + k];
+        D_12 += X->data[i_block * m + 1 * m + k] * X->data[j_block * m + 2 * m + k];
+        D_13 += X->data[i_block * m + 1 * m + k] * X->data[j_block * m + 3 * m + k];
+
+        D_20 += X->data[i_block * m + 2 * m + k] * X->data[j_block * m + k];
+        D_21 += X->data[i_block * m + 2 * m + k] * X->data[j_block * m + 1 * m + k];
+        D_22 += X->data[i_block * m + 2 * m + k] * X->data[j_block * m + 2 * m + k];
+        D_23 += X->data[i_block * m + 2 * m + k] * X->data[j_block * m + 3 * m + k];
+
+        D_30 += X->data[i_block * m + 3 * m + k] * X->data[j_block * m + k];
+        D_31 += X->data[i_block * m + 3 * m + k] * X->data[j_block * m + 1 * m + k];
+        D_32 += X->data[i_block * m + 3 * m + k] * X->data[j_block * m + 2 * m + k];
+        D_33 += X->data[i_block * m + 3 * m + k] * X->data[j_block * m + 3 * m + k];
+      }
+
+      double norm_i0 = norms.data[i_block];
+      double norm_i1 = norms.data[i_block + 1];
+      double norm_i2 = norms.data[i_block + 2];
+      double norm_i3 = norms.data[i_block + 3];
+
+      double norm_j0 = norms.data[j_block];
+      double norm_j1 = norms.data[j_block + 1];
+      double norm_j2 = norms.data[j_block + 2];
+      double norm_j3 = norms.data[j_block + 3];
+
+      D_00 = norm_i0 + norm_j0 - 2*D_00;
+      D_01 = norm_i0 + norm_j1 - 2*D_01;
+      D_02 = norm_i0 + norm_j2 - 2*D_02;
+      D_03 = norm_i0 + norm_j3 - 2*D_03;
+
+      D_10 = norm_i1 + norm_j0 - 2*D_10;
+      D_11 = norm_i1 + norm_j1 - 2*D_11;
+      D_12 = norm_i1 + norm_j2 - 2*D_12;
+      D_13 = norm_i1 + norm_j3 - 2*D_13;
+
+      D_20 = norm_i2 + norm_j0 - 2*D_20;
+      D_21 = norm_i2 + norm_j1 - 2*D_21;
+      D_22 = norm_i2 + norm_j2 - 2*D_22;
+      D_23 = norm_i2 + norm_j3 - 2*D_23;
+
+      D_30 = norm_i3 + norm_j0 - 2*D_30;
+      D_31 = norm_i3 + norm_j1 - 2*D_31;
+      D_32 = norm_i3 + norm_j2 - 2*D_32;
+      D_33 = norm_i3 + norm_j3 - 2*D_33;
+
+      // Upper triangular elements
+      D->data[i_block * n + j_block] = D_00;
+      D->data[i_block * n + j_block + 1] = D_01;
+      D->data[i_block * n + j_block + 2] = D_02;
+      D->data[i_block * n + j_block + 3] = D_03;
+
+      D->data[i_block * n + 1 * n + j_block] = D_10;
+      D->data[i_block * n + 1 * n + j_block + 1] = D_11;
+      D->data[i_block * n + 1 * n + j_block + 2] = D_12;
+      D->data[i_block * n + 1 * n + j_block + 3] = D_13;
+
+      D->data[i_block * n + 2 * n + j_block] = D_20;
+      D->data[i_block * n + 2 * n + j_block + 1] = D_21;
+      D->data[i_block * n + 2 * n + j_block + 2] = D_22;
+      D->data[i_block * n + 2 * n + j_block + 3] = D_23;
+
+      D->data[i_block * n + 3 * n + j_block] = D_30;
+      D->data[i_block * n + 3 * n + j_block + 1] = D_31;
+      D->data[i_block * n + 3 * n + j_block + 2] = D_32;
+      D->data[i_block * n + 3 * n + j_block + 3] = D_33;
+
+      // Lower triangular elements
+      D->data[j_block * n + i_block] = D_00;
+      D->data[j_block * n + 1 * n + i_block] = D_01;
+      D->data[j_block * n + 2 * n + i_block] = D_02;
+      D->data[j_block * n + 3 * n + i_block] = D_03;
+
+      D->data[j_block * n + i_block + 1] = D_10;
+      D->data[j_block * n + 1 * n + i_block + 1] = D_11;
+      D->data[j_block * n + 2 * n + i_block + 1] = D_12;
+      D->data[j_block * n + 3 * n + i_block + 1] = D_13;
+
+      D->data[j_block * n + i_block + 2] = D_20;
+      D->data[j_block * n + 1 * n + i_block + 2] = D_21;
+      D->data[j_block * n + 2 * n + i_block + 2] = D_22;
+      D->data[j_block * n + 3 * n + i_block + 2] = D_23;
+
+      D->data[j_block * n + i_block + 3] = D_30;
+      D->data[j_block * n + 1 * n + i_block + 3] = D_31;
+      D->data[j_block * n + 2 * n + i_block + 3] = D_32;
+      D->data[j_block * n + 3 * n + i_block + 3] = D_33;
+
+    }
+
+    // remaining columns
+    for (int i = i_block; i < i_block+block_size; i++) {
+      for (int j = j_block; j < n; j++) {
+
+        double sum0 = 0;
+        double sum1 = 0;
+        double sum2 = 0;
+        double sum3 = 0;
+        double sum4 = 0;
+        double sum5 = 0;
+        double sum6 = 0;
+        double sum7 = 0;
+        int k = 0;
+        for (; k < 8*(m/8); k+=8) {
+          sum0 += X->data[i * m + k] * X->data[j * m + k];
+          sum1 += X->data[i * m + k + 1] * X->data[j * m + k + 1];
+          sum2 += X->data[i * m + k + 2] * X->data[j * m + k + 2];
+          sum3 += X->data[i * m + k + 3] * X->data[j * m + k + 3];
+          sum4 += X->data[i * m + k + 4] * X->data[j * m + k + 4];
+          sum5 += X->data[i * m + k + 5] * X->data[j * m + k + 5];
+          sum6 += X->data[i * m + k + 6] * X->data[j * m + k + 6];
+          sum7 += X->data[i * m + k + 7] * X->data[j * m + k + 7];
+        }
+        for (; k < m; k++) {
+          double val_i = X->data[i * m + k];
+          double val_j = X->data[j * m + k];
+          sum0 += val_i * val_j;
+        }
+        double sum = ((sum0 + sum1) + (sum2 + sum3)) + ((sum4 + sum5) + (sum6 + sum7));
+        double dist = norms.data[i] - 2*sum + norms.data[j];
+        D->data[i * n + j] = dist;
+        D->data[j * n + i] = dist;
+
+      }
+    }
+  }
+
+  // remaining bottom right elements
+  for (int i = i_block; i < n; i++) {
+    for (int j = i+1; j < n; j++) {
+
+      double sum0 = 0;
+      double sum1 = 0;
+      double sum2 = 0;
+      double sum3 = 0;
+      double sum4 = 0;
+      double sum5 = 0;
+      double sum6 = 0;
+      double sum7 = 0;
+      int k = 0;
+      for (; k < 8*(m/8); k+=8) {
+        sum0 += X->data[i * m + k] * X->data[j * m + k];
+        sum1 += X->data[i * m + k + 1] * X->data[j * m + k + 1];
+        sum2 += X->data[i * m + k + 2] * X->data[j * m + k + 2];
+        sum3 += X->data[i * m + k + 3] * X->data[j * m + k + 3];
+        sum4 += X->data[i * m + k + 4] * X->data[j * m + k + 4];
+        sum5 += X->data[i * m + k + 5] * X->data[j * m + k + 5];
+        sum6 += X->data[i * m + k + 6] * X->data[j * m + k + 6];
+        sum7 += X->data[i * m + k + 7] * X->data[j * m + k + 7];
+      }
+      for (; k < m; k++) {
+        double val_i = X->data[i * m + k];
+        double val_j = X->data[j * m + k];
+        sum0 += val_i * val_j;
+      }
+      double sum = ((sum0 + sum1) + (sum2 + sum3)) + ((sum4 + sum5) + (sum6 + sum7));
+      double dist = norms.data[i] - 2*sum + norms.data[j];
+      D->data[i * n + j] = dist;
+      D->data[j * n + i] = dist;
+      
+    }
+  }
+
+  // Set diagonal elements
+  for (int i = 0; i < n; i++) {
+    D->data[i * n + i] = 0.0;
+  }
+}
