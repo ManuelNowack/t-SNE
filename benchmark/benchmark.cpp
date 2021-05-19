@@ -1,4 +1,5 @@
-#include <tsne/benchmark.h>
+#include "benchmark.h"
+
 #include <tsne/func_registry.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>

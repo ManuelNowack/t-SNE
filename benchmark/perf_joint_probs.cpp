@@ -1,6 +1,5 @@
 // Joint probs related benchmarks.
 
-#include <tsne/benchmark.h>
 #include <tsne/func_registry.h>
 #include <tsne/matrix.h>
 
@@ -8,6 +7,8 @@
 #include <random>
 #include <string>
 #include <vector>
+
+#include "benchmark.h"
 
 using namespace std;
 
@@ -62,7 +63,8 @@ int main(int argc, char **argv) {
   }
 
   register_functions();
-  auto &log_perplexity_func_registry = FuncRegistry<log_perplexity_func_t>::get_instance();
+  auto &log_perplexity_func_registry =
+      FuncRegistry<log_perplexity_func_t>::get_instance();
 
   int n_measurement_series = log_perplexity_func_registry.num_funcs;
   double performances[n_measurements][n_measurement_series];
@@ -78,7 +80,8 @@ int main(int argc, char **argv) {
 
     double perf;
     for (int i = 0; i < log_perplexity_func_registry.num_funcs; i++) {
-      perf = perf_test_log_perplexity(log_perplexity_func_registry.funcs[i], X_sub);
+      perf = perf_test_log_perplexity(log_perplexity_func_registry.funcs[i],
+                                      X_sub);
       cout << log_perplexity_func_registry.func_names[i] << "," << perf << endl;
       performances[i_measurement][i_series] = perf;
       i_series++;
