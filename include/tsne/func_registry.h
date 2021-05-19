@@ -6,35 +6,39 @@
 #include <string>
 #include <vector>
 
-typedef void tsne_func_t(Matrix *X, Matrix *Y, tsne_var_t *var,
-                         int n_dim);
+typedef void tsne_func_t(Matrix *X, Matrix *Y, tsne_var_t *var, int n_dim);
 typedef void joint_probs_func_t(Matrix *X, Matrix *P, Matrix *D);
 typedef void grad_desc_func_t(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                               double momentum);
+typedef void euclidean_dist_func_t(Matrix *X, Matrix *D);
+typedef void log_perplexity_func_t(double *distances, double *probabilities,
+                                   int n, int k, double precision,
+                                   double *log_perplexity, double *normlizer);
 
 template <class T>
 class FuncRegistry {
  public:
-  std::vector<T*> funcs;
+  std::vector<T *> funcs;
   std::vector<std::string> func_names;
   int num_funcs = 0;
 
   // Constraints on the singleton.
-  FuncRegistry(FuncRegistry const&) = delete;
-  void operator=(FuncRegistry const&) = delete;
+  FuncRegistry(FuncRegistry const &) = delete;
+  void operator=(FuncRegistry const &) = delete;
 
   // Get the single instance of the FunctionRegistry.
-  static FuncRegistry& get_instance() {
+  static FuncRegistry &get_instance() {
     static FuncRegistry instance;
     return instance;
   }
 
   // Registers a user function to be tested by the driver program. Registers a
   // string description of the function as well.
-  void add_function(T* f, std::string name) {
+  FuncRegistry &add_function(T *f, std::string name) {
     funcs.push_back(f);
     func_names.emplace_back(name);
     num_funcs++;
+    return *this;
   }
 
  private:

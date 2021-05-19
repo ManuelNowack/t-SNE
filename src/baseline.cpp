@@ -7,12 +7,11 @@
 #include <tsne/matrix.h>
 
 /*
-* Calculate pairwise squared Euclidean distances.
-* Squared Euclidean distances are stored in D, whose data field is expected
-* to be suitably initialised with sufficient size.
-*/
+ * Calculate pairwise squared Euclidean distances.
+ * Squared Euclidean distances are stored in D, whose data field is expected
+ * to be suitably initialised with sufficient size.
+ */
 void euclidean_dist_baseline(Matrix *X, Matrix *D) {
-
   int n = X->nrows;
   int m = X->ncols;
 
@@ -37,15 +36,14 @@ void euclidean_dist_baseline(Matrix *X, Matrix *D) {
 }
 
 /*
-* Calculate the log perplexity H for sample k for the given distances to the
-* other element and precision. Precision is the inverse of two times the
-* variance. Unnormalized probabilities, log perplexity, and normalizer of the
-* probabilities are returned by reference.
-*/
-void calc_log_perplexity(double* distances, double* probabilities, int n, int k,
-                         double precision, double* log_perplexity,
-                         double* normlizer) {
-
+ * Calculate the log perplexity H for sample k for the given distances to the
+ * other element and precision. Precision is the inverse of two times the
+ * variance. Unnormalized probabilities, log perplexity, and normalizer of the
+ * probabilities are returned by reference.
+ */
+void log_perplexity_baseline(double *distances, double *probabilities, int n,
+                             int k, double precision, double *log_perplexity,
+                             double *normlizer) {
   // calculate (unnormalised) conditional probabilities
   for (int i = 0; i < n; i++) {
     if (i == k) {
@@ -73,24 +71,23 @@ void calc_log_perplexity(double* distances, double* probabilities, int n, int k,
 }
 
 /*
-* calculates mean standard-deviation
-*/
-double calculate_mean_stddev(double *precisions, int n){
+ * calculates mean standard-deviation
+ */
+double calculate_mean_stddev(double *precisions, int n) {
   double sum = 0;
   for (int i = 0; i < n; i++) {
     sum += sqrt(1 / (2 * precisions[i]));
   }
-  return sum/n;
+  return sum / n;
 }
 
 /*
-* Calculate joint probabilities for high level points X with desired
-* perplexity. Joint probabilities are stored in P, whose data field is
-* expected to be suitably initialised with sufficient size. Actual perplexity
-* may deviate at most tol from the desired log perplexity.
-*/
+ * Calculate joint probabilities for high level points X with desired
+ * perplexity. Joint probabilities are stored in P, whose data field is
+ * expected to be suitably initialised with sufficient size. Actual perplexity
+ * may deviate at most tol from the desired log perplexity.
+ */
 void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
-
   int n = X->nrows;
 
   euclidean_dist_baseline(X, D);
@@ -108,15 +105,14 @@ void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
   for (int i = 0; i < n; i++) {
     double precision_min = 0.0;
     double precision_max = HUGE_VAL;
-    double* distances = &D->data[i * n];
-    double* probabilities = &P->data[i * n];
+    double *distances = &D->data[i * n];
+    double *probabilities = &P->data[i * n];
 
     // bisection method for a fixed number of iterations
     double actual_log_perplexity, normalizer, diff;
-    for (int iter=0; iter<kJointProbsMaxIter; iter++) {
-
-      calc_log_perplexity(distances, probabilities, n, i, precisions[i],
-                          &actual_log_perplexity, &normalizer);
+    for (int iter = 0; iter < kJointProbsMaxIter; iter++) {
+      log_perplexity_baseline(distances, probabilities, n, i, precisions[i],
+                              &actual_log_perplexity, &normalizer);
       diff = actual_log_perplexity - target_log_perplexity;
 
       if (diff > 0) {
@@ -166,12 +162,11 @@ void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
 }
 
 /*
-* Calculate affinities as in Equation (4).
-* The numerators of Equation (4) are stored in Q_numberators.
-* All matrices are expected to be initialised with sufficient memory.
-*/
+ * Calculate affinities as in Equation (4).
+ * The numerators of Equation (4) are stored in Q_numberators.
+ * All matrices are expected to be initialised with sufficient memory.
+ */
 void calc_affinities(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
-
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
@@ -189,7 +184,7 @@ void calc_affinities(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   }
 
   // set diagonal elements
-  for (int i = 0; i < n; i++){
+  for (int i = 0; i < n; i++) {
     Q->data[i * n + i] = 0;
   }
 
@@ -210,10 +205,9 @@ void calc_affinities(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
 }
 
 /*
-* Calculate cost (KL-divergence) between P and Q, i.e. KL(P||Q)
-*/
+ * Calculate cost (KL-divergence) between P and Q, i.e. KL(P||Q)
+ */
 double calc_cost(Matrix *P, Matrix *Q) {
-
   int n = P->nrows;
 
   double sum = 0;
@@ -275,9 +269,9 @@ void grad_desc_baseline(Matrix *Y, tsne_var_t *var, int n, int n_dim,
   // update step
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n_dim; j++) {
-      double value =
-          momentum * var->Y_delta.data[i * n_dim + j] -
-          kEta * var->gains.data[i * n_dim + j] * var->grad_Y.data[i * n_dim + j];
+      double value = momentum * var->Y_delta.data[i * n_dim + j] -
+                     kEta * var->gains.data[i * n_dim + j] *
+                         var->grad_Y.data[i * n_dim + j];
       var->Y_delta.data[i * n_dim + j] = value;
       Y->data[i * n_dim + j] += value;
     }
@@ -306,13 +300,12 @@ void grad_desc_baseline(Matrix *Y, tsne_var_t *var, int n, int n_dim,
   }
 }
 /*
-* Runs t-SNE on the matrix A, reducing its dimensionality to n_dim
-* dimensions. Y is expected to contain the initial low dimensional
-* embeddings. The values of Y are overwritten and at the end contain the
-* calculated embeddings.
-*/
+ * Runs t-SNE on the matrix A, reducing its dimensionality to n_dim
+ * dimensions. Y is expected to contain the initial low dimensional
+ * embeddings. The values of Y are overwritten and at the end contain the
+ * calculated embeddings.
+ */
 void tsne_baseline(Matrix *X, Matrix *Y, tsne_var_t *var, int n_dim) {
-
   int n = X->nrows;
 
   // compute high level joint probabilities

@@ -14,6 +14,13 @@ grad_desc_func_t grad_desc_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline));
 
+euclidean_dist_func_t euclidean_dist_baseline;
+
+log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll4;
+INSTANTIATE_TEST_SUITE_P(Tsne, LogPerplexityTest,
+                         testing::Values(&log_perplexity_baseline,
+                                         &log_perplexity_unroll4));
+
 tsne_func_t tsne_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));
 
@@ -89,6 +96,23 @@ TEST_P(GradDescTest, IsValid) {
   compare_tsne_var(var_expected, var_actual);
 }
 
+TEST_P(LogPerplexityTest, IsValid) {
+  euclidean_dist_baseline(&X, &var_expected.D);
+  double *distances = var_expected.D.data;
+  double *p_expected = var_expected.P.data;
+  double *p_actual = var_actual.P.data;
+  double log_perp_expected, log_perp_actual;
+  double norm_expected, norm_actual;
+
+  log_perplexity_baseline(distances, p_expected, n, 0, 0.5, &log_perp_expected,
+                          &norm_expected);
+  GetParam()(distances, p_actual, n, 0, 0.5, &log_perp_actual, &norm_actual);
+
+  EXPECT_TRUE(IsArrayNear(p_expected, p_actual, n, "probabilities"));
+  EXPECT_NEAR(log_perp_expected, log_perp_actual, PRECISION_ERR);
+  EXPECT_NEAR(norm_expected, norm_actual, PRECISION_ERR);
+}
+
 TEST_P(TsneTest, IsValid) {
   tsne_baseline(&X, &Y_expected, &var_expected, n_dim);
   GetParam()(&X, &Y_actual, &var_actual, n_dim);
@@ -116,26 +140,6 @@ void test_calc_squared_euclid_dist(void (*new_f)(Matrix *, Matrix *), Matrix *X,
 
   free((void *)D_new.data);
   free((void *)X_new.data);
-}
-
-void test_calc_log_perplexity(void (*new_f)(double *, double *, int, int,
-                                            double, double *, double *),
-                              double *distances, double *probabilities, int n,
-                              int k, double precision) {
-  printf("Testing calc_log_perplexity:\n");
-  double *prob_new = (double *)malloc(n * sizeof(double));
-  memcpy(prob_new, probabilities, n * sizeof(double));
-  double log_perp1, log_perp2, normalizer1, normalizer2;
-
-  calc_log_perplexity(distances, probabilities, n, k, precision, &log_perp1,
-                      &normalizer1);
-  new_f(distances, prob_new, n, k, precision, &log_perp2, &normalizer2);
-
-  IsArrayNear(probabilities, prob_new, n, "probabilities");
-  IsArrayNear(&log_perp1, &log_perp2, 1, "log_perp");
-  IsArrayNear(&normalizer1, &normalizer2, 1, "normalizer");
-
-  free((void *)prob_new);
 }
 
 void test_calc_affinities(void (*new_f)(Matrix *, Matrix *, Matrix *, Matrix *),

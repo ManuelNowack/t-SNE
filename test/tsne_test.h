@@ -64,5 +64,8 @@ class JointProbsTest
       public testing::WithParamInterface<joint_probs_func_t *> {};
 class GradDescTest : public BaseTest,
                      public testing::WithParamInterface<grad_desc_func_t *> {};
+class LogPerplexityTest
+    : public BaseTest,
+      public testing::WithParamInterface<log_perplexity_func_t *> {};
 
 #endif  // TSNE_TEST_H_

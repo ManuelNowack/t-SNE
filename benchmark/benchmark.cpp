@@ -5,6 +5,8 @@
 
 #include "tsc_x86.h"
 
+euclidean_dist_func_t euclidean_dist_baseline;
+
 // Create intermediate t-SNE variables.
 void create_tsne_variables(tsne_var_t &var, int n, int n_dim) {
   var.P = create_matrix(n, n);
@@ -158,6 +160,56 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
       f(&Y, &var, n, n_dim, kFinalMomentum);
+    }
+    end = stop_tsc(start);
+
+    cycles = ((double)end) / num_runs;
+    total_cycles += cycles;
+  }
+  total_cycles /= REP;
+
+  cycles = total_cycles;
+  destroy_tsne_variables(var);
+
+  return cycles;
+}
+
+double perf_test_log_perplexity(log_perplexity_func_t *f, Matrix &X) {
+  double cycles = 0.;
+  size_t num_runs = 1;
+  double multiplier = 1;
+  uint64_t start, end;
+
+  int n = X.nrows;
+  const int n_dim = 2;
+  tsne_var_t var;
+  create_tsne_variables(var, n, n_dim);
+
+  // Populate the distance matrix.
+  euclidean_dist_baseline(&X, &var.D);
+
+  double *distances = var.D.data;
+  double *probs = var.P.data;
+  double log_perp, norm;
+
+  do {
+    num_runs = num_runs * multiplier;
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; i++) {
+      f(distances, probs, n, 0, 0.5, &log_perp, &norm);
+    }
+    end = stop_tsc(start);
+
+    cycles = (double)end;
+    multiplier = (CYCLES_REQUIRED) / (cycles);
+
+  } while (multiplier > 2);
+
+  double total_cycles = 0;
+  for (size_t j = 0; j < REP; j++) {
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; ++i) {
+      f(distances, probs, n, 0, 0.5, &log_perp, &norm);
     }
     end = stop_tsc(start);
 
