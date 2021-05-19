@@ -400,23 +400,14 @@ void grad_desc_loop_merge(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
         value1 *= 4;
         gradydata[twoi] = value0;
         gradydata[twoi + 1] = value1;
-        twoi += 2;
-    }
 
-    double mean0 = 0, mean1 = 0;
-    for(int i=0; i<(2*n); i+=2){
         // calculate gains, according to adaptive heuristic of Python implementation
-        double ydeltadatai = ydeltadata[i];
-        double ydeltadataip1 = ydeltadata[i+1];
-        double gradydatai = gradydata[i];
-        double gradydataip1 = gradydata[i+1];
-
-        bool positive_grad0 = (gradydatai > 0);
-        bool positive_delta0 = (ydeltadatai > 0);
-        bool positive_grad1 = (gradydataip1 > 0);
-        bool positive_delta1 = (ydeltadataip1 > 0);
-        double val0 = gainsdata[i];
-        double val1 = gainsdata[i+1];
+        bool positive_grad0 = (value0 > 0);
+        bool positive_delta0 = (ydeltadata[twoi] > 0);
+        bool positive_grad1 = (value1 > 0);
+        bool positive_delta1 = (ydeltadata[twoi+1] > 0);
+        double val0 = gainsdata[twoi];
+        double val1 = gainsdata[twoi+1];
 
         val0 = (positive_grad0 == positive_delta0) ? val0 * 0.8 : val0 + 0.2;
         val1 = (positive_grad1 == positive_delta1) ? val1 * 0.8 : val1 + 0.2;
@@ -427,18 +418,25 @@ void grad_desc_loop_merge(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
             val1 = kMinGain;
         }
 
-        gainsdata[i] = val0;
-        gainsdata[i+1] = val1;
+        gainsdata[twoi] = val0;
+        gainsdata[twoi+1] = val1;
 
+        twoi += 2;
+    }
+
+    twoi = 0;
+    double mean0 = 0, mean1 = 0;
+    for(int i=0; i<n; i++){
         //update step
-        double v0 = momentum * ydeltadatai - kEta * val0 * gradydatai;
-        double v1 = momentum * ydeltadataip1 - kEta * val1 * gradydataip1;
-        ydeltadata[i] = v0;
-        ydeltadata[i + 1] = v1;
-        ydata[i] += v0;
-        ydata[i+1] += v1;
-        mean0 += ydata[i];
-        mean1 += ydata[i+1];
+        double v0 = momentum * ydeltadata[twoi] - kEta * gainsdata[twoi] * gradydata[twoi];
+        double v1 = momentum * ydeltadata[twoi+1] - kEta * gainsdata[twoi+1] * gradydata[twoi+1];
+        ydeltadata[twoi] = v0;
+        ydeltadata[twoi + 1] = v1;
+        ydata[twoi] += v0;
+        ydata[twoi+1] += v1;
+        mean0 += ydata[twoi];
+        mean1 += ydata[twoi+1];
+        twoi+=2;
     }
     // take mean
     mean0 /= n;
