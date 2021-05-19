@@ -11,7 +11,7 @@ test:
   before_script:
     - apt update && apt -y install cmake
   script:
-    - cmake -S . -B build
+    - cmake -S . -B build -DBUILD_GMOCK=OFF
     - cmake --build build
     - build/bin/tsne_test --gtest_output="xml:report.xml"
   artifacts:
