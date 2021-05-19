@@ -13,5 +13,7 @@ void grad_desc_ndim_unroll(Matrix *Y, tsne_var_t *var, int n, int n_dim,
 void grad_desc_mean_unroll(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                         double momentum);
 
-void grad_desc_ydata_opt(Matrix *Y, tsne_var_t *var, int n, int n_dim,
+void grad_desc_tmp_opt(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                         double momentum);
+
+void grad_desc_loop_merge(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);

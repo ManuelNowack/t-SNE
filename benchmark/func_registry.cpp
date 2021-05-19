@@ -10,8 +10,8 @@ joint_probs_func_t joint_probs_baseline;
 // Put all grad_desc function declarations here.
 grad_desc_func_t grad_desc_b;
 grad_desc_func_t grad_desc_ndim_unroll;
-grad_desc_func_t grad_desc_mean_unroll;
-grad_desc_func_t grad_desc_ydata_opt;
+grad_desc_func_t grad_desc_tmp_opt;
+grad_desc_func_t grad_desc_loop_merge;
 
 void register_functions() {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
@@ -29,6 +29,6 @@ void register_functions() {
   // Put all grad_desc functions to test here.
   grad_desc_func_registry.add_function(&grad_desc_b, "grad_desc_baseline");
   grad_desc_func_registry.add_function(&grad_desc_ndim_unroll, "grad_desc_ndim_unroll");
-  grad_desc_func_registry.add_function(&grad_desc_mean_unroll, "grad_desc_mean_unroll");
-  grad_desc_func_registry.add_function(&grad_desc_ydata_opt, "grad_desc_ydata_opt");
+  grad_desc_func_registry.add_function(&grad_desc_tmp_opt, "grad_desc_tmp_opt");
+  grad_desc_func_registry.add_function(&grad_desc_loop_merge, "grad_desc_loop_merge");
 }
