@@ -31,10 +31,11 @@ class FuncRegistry {
 
   // Registers a user function to be tested by the driver program. Registers a
   // string description of the function as well.
-  void add_function(T* f, std::string name) {
+  FuncRegistry &add_function(T *f, std::string name) {
     funcs.push_back(f);
     func_names.emplace_back(name);
     num_funcs++;
+    return *this;
   }
 
  private:
