@@ -6,25 +6,33 @@
 #include <string>
 #include <vector>
 
-typedef void tsne_func_t(Matrix *X, Matrix *Y, tsne_var_t *var,
-                         int n_dim);
+typedef void tsne_func_t(Matrix *X, Matrix *Y, tsne_var_t *var, int n_dim);
 typedef void joint_probs_func_t(Matrix *X, Matrix *P, Matrix *D);
 typedef void grad_desc_func_t(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                               double momentum);
 
+// Put all tsne function declarations here.
+tsne_func_t tsne_baseline;
+
+// Put all joint_probs function declarations here.
+joint_probs_func_t joint_probs_baseline;
+
+// Put all grad_desc function declarations here.
+grad_desc_func_t grad_desc_baseline;
+
 template <class T>
 class FuncRegistry {
  public:
-  std::vector<T*> funcs;
+  std::vector<T *> funcs;
   std::vector<std::string> func_names;
   int num_funcs = 0;
 
   // Constraints on the singleton.
-  FuncRegistry(FuncRegistry const&) = delete;
-  void operator=(FuncRegistry const&) = delete;
+  FuncRegistry(FuncRegistry const &) = delete;
+  void operator=(FuncRegistry const &) = delete;
 
   // Get the single instance of the FunctionRegistry.
-  static FuncRegistry& get_instance() {
+  static FuncRegistry &get_instance() {
     static FuncRegistry instance;
     return instance;
   }

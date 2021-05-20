@@ -1,20 +1,12 @@
 #include <tsne/func_registry.h>
 #include <tsne/matrix.h>
 
-// Put all tsne function declarations here.
-tsne_func_t tsne_baseline;
-
-// Put all joint_probs function declarations here.
-joint_probs_func_t joint_probs_baseline;
-
-// Put all grad_desc function declarations here.
-grad_desc_func_t grad_desc_baseline;
-
 void register_functions() {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
       FuncRegistry<joint_probs_func_t>::get_instance();
-  auto &grad_desc_func_registry = FuncRegistry<grad_desc_func_t>::get_instance();
+  auto &grad_desc_func_registry =
+      FuncRegistry<grad_desc_func_t>::get_instance();
 
   // Put all tsne functions to test here.
   tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
