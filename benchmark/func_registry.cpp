@@ -26,5 +26,7 @@ void register_functions() {
       .add_function(&log_perplexity_baseline, "log_perplexity_baseline")
       .add_function(&log_perplexity_unroll2, "log_perplexity_unroll2")
       .add_function(&log_perplexity_unroll4, "log_perplexity_unroll4")
-      .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8");
+      .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
+      .add_function(&log_perplexity_avx, "log_perplexity_avx")
+      .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4");
 }
