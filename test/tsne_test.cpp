@@ -14,12 +14,11 @@ grad_desc_func_t grad_desc_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline));
 
-euclidean_dist_func_t euclidean_dist_baseline;
-
-log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll4;
 INSTANTIATE_TEST_SUITE_P(Tsne, LogPerplexityTest,
                          testing::Values(&log_perplexity_baseline,
-                                         &log_perplexity_unroll4));
+                                         &log_perplexity_unroll2,
+                                         &log_perplexity_unroll4,
+                                         &log_perplexity_unroll8));
 
 tsne_func_t tsne_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));

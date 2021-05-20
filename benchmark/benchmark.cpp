@@ -6,8 +6,6 @@
 
 #include "tsc_x86.h"
 
-euclidean_dist_func_t euclidean_dist_baseline;
-
 // Create intermediate t-SNE variables.
 void create_tsne_variables(tsne_var_t &var, int n, int n_dim) {
   var.P = create_matrix(n, n);

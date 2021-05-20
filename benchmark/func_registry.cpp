@@ -10,9 +10,6 @@ joint_probs_func_t joint_probs_baseline;
 // Put all grad_desc function declarations here.
 grad_desc_func_t grad_desc_baseline;
 
-// Put all log_perp_actual fuction declarations here.
-log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll4;
-
 void register_functions() {
   auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
   auto &joint_probs_func_registry =
@@ -36,5 +33,7 @@ void register_functions() {
   // Put all log_perplexity functions to test here.
   log_perplexity_func_registry
       .add_function(&log_perplexity_baseline, "log_perplexity_baseline")
-      .add_function(&log_perplexity_unroll4, "log_perplexity_unroll4");
+      .add_function(&log_perplexity_unroll2, "log_perplexity_unroll2")
+      .add_function(&log_perplexity_unroll4, "log_perplexity_unroll4")
+      .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8");
 }

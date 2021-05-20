@@ -15,6 +15,12 @@ typedef void log_perplexity_func_t(double *distances, double *probabilities,
                                    int n, int k, double precision,
                                    double *log_perplexity, double *normlizer);
 
+// Put all log_perp_actual fuction declarations here.
+log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
+    log_perplexity_unroll4, log_perplexity_unroll8;
+
+euclidean_dist_func_t euclidean_dist_baseline;
+
 template <class T>
 class FuncRegistry {
  public:
