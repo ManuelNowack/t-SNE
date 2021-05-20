@@ -2,7 +2,7 @@
 #include <tsne/matrix.h>
 #include "base.h"
 
-#define PRECISION_ERR 0
+#define PRECISION_ERR 1e-3
 
 /**
  * compares the n double values of the baseline and the modified function. Precision is the
