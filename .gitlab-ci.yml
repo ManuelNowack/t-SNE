@@ -3,24 +3,16 @@
 # see https://hub.docker.com/_/gcc/
 image: gcc
 
-build:
-  stage: build
+# run tests using the binary built before
+test:
+  stage: test
   # instead of calling g++ directly you can also use some build toolkit like make
   # install the necessary build tools when needed
   before_script:
     - apt update && apt -y install cmake
   script:
-    - cmake -S . -B build
+    - cmake -S . -B build -DBUILD_GMOCK=OFF
     - cmake --build build
-  artifacts:
-    paths:
-      - build
-
-
-# run tests using the binary built before
-test:
-  stage: test
-  script:
     - build/bin/tsne_test --gtest_output="xml:report.xml"
   artifacts:
       when: always

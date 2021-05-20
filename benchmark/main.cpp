@@ -27,7 +27,6 @@
  *  along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <tsne/benchmark.h>
 #include <tsne/func_registry.h>
 #include <tsne/matrix.h>
 
@@ -35,6 +34,8 @@
 #include <random>
 #include <string>
 #include <vector>
+
+#include "benchmark.h"
 
 using namespace std;
 
