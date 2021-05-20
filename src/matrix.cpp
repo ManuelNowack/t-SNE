@@ -94,7 +94,9 @@ void store_matrix(const char *filepath, Matrix A) {
 Matrix create_matrix(int nrows, int ncols) {
   Matrix A = {.nrows = nrows, .ncols = ncols, .data = NULL};
 
-  posix_memalign((void **)&A.data, 32, nrows * ncols * sizeof(double));
+  size_t datasize = nrows * ncols * sizeof(double);
+  posix_memalign((void **)&A.data, 32, datasize);
+  memset(A.data, 0, datasize);
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
