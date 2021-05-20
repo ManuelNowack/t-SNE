@@ -127,11 +127,9 @@ int main(int argc, char **argv) {
       i_series++;
     }
 
-    // Pick one joint_probs implementation to populate the variables.
-    auto joint_probs = joint_probs_func_registry.funcs[0];
     for (int i = 0; i < grad_desc_func_registry.num_funcs; i++) {
-      perf = perf_test_grad_desc(grad_desc_func_registry.funcs[i], joint_probs,
-                                 X_sub, Y_sub);
+      perf =
+          perf_test_grad_desc(grad_desc_func_registry.funcs[i], X_sub, Y_sub);
       cout << grad_desc_func_registry.func_names[i] << "," << perf << endl;
       performances[i_measurement][i_series] = perf;
       i_series++;

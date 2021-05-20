@@ -6,11 +6,9 @@
 #include <tsne/matrix.h>
 
 // Put the functions you want to test here.
-joint_probs_func_t joint_probs_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
                          testing::Values(&joint_probs_baseline));
 
-grad_desc_func_t grad_desc_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline));
 

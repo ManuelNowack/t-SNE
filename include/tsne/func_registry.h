@@ -21,6 +21,15 @@ log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
 
 euclidean_dist_func_t euclidean_dist_baseline;
 
+// Put all tsne function declarations here.
+tsne_func_t tsne_baseline;
+
+// Put all joint_probs function declarations here.
+joint_probs_func_t joint_probs_baseline;
+
+// Put all grad_desc function declarations here.
+grad_desc_func_t grad_desc_baseline;
+
 template <class T>
 class FuncRegistry {
  public:
