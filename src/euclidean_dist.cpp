@@ -1471,3 +1471,389 @@ void euclidean_dist_alt_vec_unroll8(Matrix *X, Matrix *D) {
     D_data[i * n + i] = 0.0;
   }
 }
+
+/*
+* Vectorize, unroll by 4x4.
+*/
+void euclidean_dist_alt_vec_unroll4x4(Matrix *X, Matrix *D) {
+
+  int n = X->nrows;
+  int m = X->ncols;
+
+  double *X_data = X->data;
+  double *D_data = D->data;
+
+  // Pointer to last row of D
+  Matrix norms = create_matrix(n, 1);
+
+  // Pre-compute squared Euclidean norms
+  int i = 0;
+  for (; i < 8*(n/8); i+=8) {
+    __m256d acc0 = _mm256_setzero_pd();
+    __m256d acc1 = _mm256_setzero_pd();
+    __m256d acc2 = _mm256_setzero_pd();
+    __m256d acc3 = _mm256_setzero_pd();
+    __m256d acc4 = _mm256_setzero_pd();
+    __m256d acc5 = _mm256_setzero_pd();
+    __m256d acc6 = _mm256_setzero_pd();
+    __m256d acc7 = _mm256_setzero_pd();
+    int k = 0;
+    for (; k < 4*(m/4); k+=4) {
+      __m256d x0 = _mm256_loadu_pd(X_data + i * m + k);
+      acc0 = _mm256_fmadd_pd(x0, x0, acc0);
+      __m256d x1 = _mm256_loadu_pd(X_data + (i+1) * m + k);
+      acc1 = _mm256_fmadd_pd(x1, x1, acc1);
+      __m256d x2 = _mm256_loadu_pd(X_data + (i+2) * m + k);
+      acc2 = _mm256_fmadd_pd(x2, x2, acc2);
+      __m256d x3 = _mm256_loadu_pd(X_data + (i+3) * m + k);
+      acc3 = _mm256_fmadd_pd(x3, x3, acc3);
+      __m256d x4 = _mm256_loadu_pd(X_data + (i+4) * m + k);
+      acc4 = _mm256_fmadd_pd(x4, x4, acc4);
+      __m256d x5 = _mm256_loadu_pd(X_data + (i+5) * m + k);
+      acc5 = _mm256_fmadd_pd(x5, x5, acc5);
+      __m256d x6 = _mm256_loadu_pd(X_data + (i+6) * m + k);
+      acc6 = _mm256_fmadd_pd(x6, x6, acc6);
+      __m256d x7 = _mm256_loadu_pd(X_data + (i+7) * m + k);
+      acc7 = _mm256_fmadd_pd(x7, x7, acc7);
+    }
+
+    // Sum vector
+    __m256d acc01 = _mm256_hadd_pd(acc0, acc1);
+    __m256d tmp01 = _mm256_permute4x64_pd(acc01, 0b01001110);
+    acc01 = _mm256_add_pd(acc01, tmp01);
+
+    __m256d acc23 = _mm256_hadd_pd(acc2, acc3);
+    __m256d tmp23 = _mm256_permute4x64_pd(acc23, 0b01001110);
+    acc23 = _mm256_add_pd(acc23, tmp23);
+
+    __m256d acc45 = _mm256_hadd_pd(acc4, acc5);
+    __m256d tmp45 = _mm256_permute4x64_pd(acc45, 0b01001110);
+    acc45 = _mm256_add_pd(acc45, tmp45);
+
+    __m256d acc67 = _mm256_hadd_pd(acc6, acc7);
+    __m256d tmp67 = _mm256_permute4x64_pd(acc67, 0b01001110);
+    acc67 = _mm256_add_pd(acc67, tmp67);
+
+  
+    // Remaining elements
+    double sum0 = 0;
+    double sum1 = 0;
+    double sum2 = 0;
+    double sum3 = 0;
+    double sum4 = 0;
+    double sum5 = 0;
+    double sum6 = 0;
+    double sum7 = 0;
+    for (; k < m; k++) {
+      double val0 = X_data[i * m + k];
+      sum0 += val0 * val0;
+      double val1 = X_data[(i+1) * m + k];
+      sum1 += val1 * val1;
+      double val2 = X_data[(i+2) * m + k];
+      sum2 += val2 * val2;
+      double val3 = X_data[(i+3) * m + k];
+      sum3 += val3 * val3;
+      double val4 = X_data[(i+4) * m + k];
+      sum4 += val4 * val4;
+      double val5 = X_data[(i+5) * m + k];
+      sum5 += val5 * val5;
+      double val6 = X_data[(i+6) * m + k];
+      sum6 += val6 * val6;
+      double val7 = X_data[(i+7) * m + k];
+      sum7 += val7 * val7;
+    }
+
+    // Store in last row of D.
+    norms.data[i] = sum0 += _mm256_cvtsd_f64(acc01);
+    norms.data[i+1] = sum1 += _mm256_cvtsd_f64(_mm256_permute_pd(acc01, 0b0101));
+
+    norms.data[i+2] = sum2 += _mm256_cvtsd_f64(acc23);
+    norms.data[i+3] = sum3 += _mm256_cvtsd_f64(_mm256_permute_pd(acc23, 0b0101));
+
+    norms.data[i+4] = sum4 += _mm256_cvtsd_f64(acc45);
+    norms.data[i+5] = sum5 += _mm256_cvtsd_f64(_mm256_permute_pd(acc45, 0b0101));
+
+    norms.data[i+6] = sum6 += _mm256_cvtsd_f64(acc67);
+    norms.data[i+7] = sum7 += _mm256_cvtsd_f64(_mm256_permute_pd(acc67, 0b0101));
+  }
+  for (; i < n; i++) {
+    __m256d acc = _mm256_setzero_pd();
+    int k = 0;
+    for (; k < 4*(m/4); k+=4) {
+      __m256d x = _mm256_loadu_pd(X_data + i * m + k);
+      acc = _mm256_fmadd_pd(x, x, acc);
+    }
+
+    // Sum vector
+    acc = _mm256_hadd_pd(acc, acc);
+    __m256d tmp = _mm256_permute4x64_pd(acc, 0b01001110);
+    acc = _mm256_add_pd(acc, tmp);
+
+    // Remaining elements
+    double sum = 0;
+    for (; k < m; k++) {
+      double val = X_data[i * m + k];
+      sum += val * val;
+    }
+
+    // Store in last row of D.
+    norms.data[i] = sum += _mm256_cvtsd_f64(acc);
+  }
+
+  // Calculate squared Euclidean distances
+  i = 0;
+  for (; i < 4*(n/4); i+=4) {
+    for (int j = i; j < 4*(n/4); j+=4) {
+      __m256d acc00 = _mm256_setzero_pd();
+      __m256d acc01 = _mm256_setzero_pd();
+      __m256d acc02 = _mm256_setzero_pd();
+      __m256d acc03 = _mm256_setzero_pd();
+
+      __m256d acc10 = _mm256_setzero_pd();
+      __m256d acc11 = _mm256_setzero_pd();
+      __m256d acc12 = _mm256_setzero_pd();
+      __m256d acc13 = _mm256_setzero_pd();
+
+      __m256d acc20 = _mm256_setzero_pd();
+      __m256d acc21 = _mm256_setzero_pd();
+      __m256d acc22 = _mm256_setzero_pd();
+      __m256d acc23 = _mm256_setzero_pd();
+
+      __m256d acc30 = _mm256_setzero_pd();
+      __m256d acc31 = _mm256_setzero_pd();
+      __m256d acc32 = _mm256_setzero_pd();
+      __m256d acc33 = _mm256_setzero_pd();
+
+      int k = 0;
+      for (; k < 4*(m/4); k+=4) {
+        __m256d x0 = _mm256_loadu_pd(X_data + i * m + k);
+        __m256d x1 = _mm256_loadu_pd(X_data + (i+1) * m + k);
+        __m256d x2 = _mm256_loadu_pd(X_data + (i+2) * m + k);
+        __m256d x3 = _mm256_loadu_pd(X_data + (i+3) * m + k);
+
+        __m256d y0 = _mm256_loadu_pd(X_data + j * m + k);
+        __m256d y1 = _mm256_loadu_pd(X_data + (j+1) * m + k);
+        __m256d y2 = _mm256_loadu_pd(X_data + (j+2) * m + k);
+        __m256d y3 = _mm256_loadu_pd(X_data + (j+3) * m + k);
+
+        acc00 = _mm256_fmadd_pd(x0, y0, acc00);
+        acc01 = _mm256_fmadd_pd(x0, y1, acc01);
+        acc02 = _mm256_fmadd_pd(x0, y2, acc02);
+        acc03 = _mm256_fmadd_pd(x0, y3, acc03);
+
+        acc10 = _mm256_fmadd_pd(x1, y0, acc10);
+        acc11 = _mm256_fmadd_pd(x1, y1, acc11);
+        acc12 = _mm256_fmadd_pd(x1, y2, acc12);
+        acc13 = _mm256_fmadd_pd(x1, y3, acc13);
+
+        acc20 = _mm256_fmadd_pd(x2, y0, acc20);
+        acc21 = _mm256_fmadd_pd(x2, y1, acc21);
+        acc22 = _mm256_fmadd_pd(x2, y2, acc22);
+        acc23 = _mm256_fmadd_pd(x2, y3, acc23);
+
+        acc30 = _mm256_fmadd_pd(x3, y0, acc30);
+        acc31 = _mm256_fmadd_pd(x3, y1, acc31);
+        acc32 = _mm256_fmadd_pd(x3, y2, acc32);
+        acc33 = _mm256_fmadd_pd(x3, y3, acc33);
+      }
+
+      // Sum vector
+      __m256d acc0001 = _mm256_hadd_pd(acc00, acc01);
+      __m256d tmp0001 = _mm256_permute4x64_pd(acc0001, 0b01001110);
+      acc0001 = _mm256_add_pd(acc0001, tmp0001);
+      __m256d acc0203 = _mm256_hadd_pd(acc02, acc03);
+      __m256d tmp0203 = _mm256_permute4x64_pd(acc0203, 0b01001110);
+      acc0203 = _mm256_add_pd(acc0203, tmp0203);
+
+      __m256d acc1011 = _mm256_hadd_pd(acc10, acc11);
+      __m256d tmp1011 = _mm256_permute4x64_pd(acc1011, 0b01001110);
+      acc1011 = _mm256_add_pd(acc1011, tmp1011);
+      __m256d acc1213 = _mm256_hadd_pd(acc12, acc13);
+      __m256d tmp1213 = _mm256_permute4x64_pd(acc1213, 0b01001110);
+      acc1213 = _mm256_add_pd(acc1213, tmp1213);
+
+      __m256d acc2021 = _mm256_hadd_pd(acc20, acc21);
+      __m256d tmp2021 = _mm256_permute4x64_pd(acc2021, 0b01001110);
+      acc2021 = _mm256_add_pd(acc2021, tmp2021);
+      __m256d acc2223 = _mm256_hadd_pd(acc22, acc23);
+      __m256d tmp2223 = _mm256_permute4x64_pd(acc2223, 0b01001110);
+      acc2223 = _mm256_add_pd(acc2223, tmp2223);
+
+      __m256d acc3031 = _mm256_hadd_pd(acc30, acc31);
+      __m256d tmp3031 = _mm256_permute4x64_pd(acc3031, 0b01001110);
+      acc3031 = _mm256_add_pd(acc3031, tmp3031);
+      __m256d acc3233 = _mm256_hadd_pd(acc32, acc33);
+      __m256d tmp3233 = _mm256_permute4x64_pd(acc3233, 0b01001110);
+      acc3233 = _mm256_add_pd(acc3233, tmp3233);
+
+
+      // Remaining elements
+      double sum00 = 0;
+      double sum01 = 0;
+      double sum02 = 0;
+      double sum03 = 0;
+
+      double sum10 = 0;
+      double sum11 = 0;
+      double sum12 = 0;
+      double sum13 = 0;
+
+      double sum20 = 0;
+      double sum21 = 0;
+      double sum22 = 0;
+      double sum23 = 0;
+
+      double sum30 = 0;
+      double sum31 = 0;
+      double sum32 = 0;
+      double sum33 = 0;
+
+      for (; k < m; k++) {
+        double val_i_0 = X_data[i * m + k];
+        double val_i_1 = X_data[(i+1) * m + k];
+        double val_i_2 = X_data[(i+2) * m + k];
+        double val_i_3 = X_data[(i+3) * m + k];
+        
+        double val_j_0 = X_data[j * m + k];
+        double val_j_1 = X_data[(j+1) * m + k];
+        double val_j_2 = X_data[(j+2) * m + k];
+        double val_j_3 = X_data[(j+3) * m + k];
+
+        sum00 += val_i_0 * val_j_0;
+        sum01 += val_i_0 * val_j_1;
+        sum02 += val_i_0 * val_j_2;
+        sum03 += val_i_0 * val_j_3;
+
+        sum10 += val_i_1 * val_j_0;
+        sum11 += val_i_1 * val_j_1;
+        sum12 += val_i_1 * val_j_2;
+        sum13 += val_i_1 * val_j_3;
+
+        sum20 += val_i_2 * val_j_0;
+        sum21 += val_i_2 * val_j_1;
+        sum22 += val_i_2 * val_j_2;
+        sum23 += val_i_2 * val_j_3;
+
+        sum30 += val_i_3 * val_j_0;
+        sum31 += val_i_3 * val_j_1;
+        sum32 += val_i_3 * val_j_2;
+        sum33 += val_i_3 * val_j_3;
+      }
+
+      sum00 += _mm256_cvtsd_f64(acc0001);
+      sum01 += _mm256_cvtsd_f64(_mm256_permute_pd(acc0001, 0b0101));
+      sum02 += _mm256_cvtsd_f64(acc0203);
+      sum03 += _mm256_cvtsd_f64(_mm256_permute_pd(acc0203, 0b0101));
+
+      sum10 += _mm256_cvtsd_f64(acc1011);
+      sum11 += _mm256_cvtsd_f64(_mm256_permute_pd(acc1011, 0b0101));
+      sum12 += _mm256_cvtsd_f64(acc1213);
+      sum13 += _mm256_cvtsd_f64(_mm256_permute_pd(acc1213, 0b0101));
+
+      sum20 += _mm256_cvtsd_f64(acc2021);
+      sum21 += _mm256_cvtsd_f64(_mm256_permute_pd(acc2021, 0b0101));
+      sum22 += _mm256_cvtsd_f64(acc2223);
+      sum23 += _mm256_cvtsd_f64(_mm256_permute_pd(acc2223, 0b0101));
+
+      sum30 += _mm256_cvtsd_f64(acc3031);
+      sum31 += _mm256_cvtsd_f64(_mm256_permute_pd(acc3031, 0b0101));
+      sum32 += _mm256_cvtsd_f64(acc3233);
+      sum33 += _mm256_cvtsd_f64(_mm256_permute_pd(acc3233, 0b0101));
+
+      double dist00 = norms.data[i] - 2*sum00 + norms.data[j];
+      double dist01 = norms.data[i] - 2*sum01 + norms.data[j+1];
+      double dist02 = norms.data[i] - 2*sum02 + norms.data[j+2];
+      double dist03 = norms.data[i] - 2*sum03 + norms.data[j+3];
+
+      double dist10 = norms.data[i+1] - 2*sum10 + norms.data[j];
+      double dist11 = norms.data[i+1] - 2*sum11 + norms.data[j+1];
+      double dist12 = norms.data[i+1] - 2*sum12 + norms.data[j+2];
+      double dist13 = norms.data[i+1] - 2*sum13 + norms.data[j+3];
+
+      double dist20 = norms.data[i+2] - 2*sum20 + norms.data[j];
+      double dist21 = norms.data[i+2] - 2*sum21 + norms.data[j+1];
+      double dist22 = norms.data[i+2] - 2*sum22 + norms.data[j+2];
+      double dist23 = norms.data[i+2] - 2*sum23 + norms.data[j+3];
+
+      double dist30 = norms.data[i+3] - 2*sum30 + norms.data[j];
+      double dist31 = norms.data[i+3] - 2*sum31 + norms.data[j+1];
+      double dist32 = norms.data[i+3] - 2*sum32 + norms.data[j+2];
+      double dist33 = norms.data[i+3] - 2*sum33 + norms.data[j+3];
+
+      D_data[i * n + j] = dist00;
+      D_data[i * n + j + 1] = dist01;
+      D_data[i * n + j + 2] = dist02;
+      D_data[i * n + j + 3] = dist03;
+
+      D_data[(i+1) * n + j] = dist10;
+      D_data[(i+1) * n + j + 1] = dist11;
+      D_data[(i+1) * n + j + 2] = dist12;
+      D_data[(i+1) * n + j + 3] = dist13;
+
+      D_data[(i+2) * n + j] = dist20;
+      D_data[(i+2) * n + j + 1] = dist21;
+      D_data[(i+2) * n + j + 2] = dist22;
+      D_data[(i+2) * n + j + 3] = dist23;
+
+      D_data[(i+3) * n + j] = dist30;
+      D_data[(i+3) * n + j + 1] = dist31;
+      D_data[(i+3) * n + j + 2] = dist32;
+      D_data[(i+3) * n + j + 3] = dist33;
+
+
+      D_data[j * n + i] = dist00;
+      D_data[j * n + i + 1] = dist10;
+      D_data[j * n + i + 2] = dist20;
+      D_data[j * n + i + 3] = dist30;
+
+      D_data[(j+1) * n + i] = dist01;
+      D_data[(j+1) * n + i + 1] = dist11;
+      D_data[(j+1) * n + i + 2] = dist21;
+      D_data[(j+1) * n + i + 3] = dist31;
+
+      D_data[(j+2) * n + i] = dist02;
+      D_data[(j+2) * n + i + 1] = dist12;
+      D_data[(j+2) * n + i + 2] = dist22;
+      D_data[(j+2) * n + i + 3] = dist32;
+
+      D_data[(j+3) * n + i] = dist03;
+      D_data[(j+3) * n + i + 1] = dist13;
+      D_data[(j+3) * n + i + 2] = dist23;
+      D_data[(j+3) * n + i + 3] = dist33;
+    }
+  }
+  for (; i < n; i++) {
+    for (int j = i+1; j < n; j++) {
+      __m256d acc = _mm256_setzero_pd();
+      int k = 0;
+      for (; k < 4*(m/4); k+=4) {
+        __m256d x = _mm256_loadu_pd(X_data + i * m + k);
+        __m256d y = _mm256_loadu_pd(X_data + j * m + k);
+        acc = _mm256_fmadd_pd(x, y, acc);
+      }
+
+      // Sum vector
+      acc = _mm256_hadd_pd(acc, acc);
+      __m256d tmp = _mm256_permute4x64_pd(acc, 0b01001110);
+      acc = _mm256_add_pd(acc, tmp);
+
+      // Remaining elements
+      double sum = 0;
+      for (; k < m; k++) {
+        double val_i = X_data[i * m + k];
+        double val_j = X_data[j * m + k];
+        sum += val_i * val_j;
+      }
+      sum += _mm256_cvtsd_f64(acc);
+
+      double dist = norms.data[i] - 2*sum + norms.data[j];
+      D_data[i * n + j] = dist;
+      D_data[j * n + i] = dist;
+    }
+  }
+
+  // Set diagonal elements
+  for (int i = 0; i < n; i++) {
+    D_data[i * n + i] = 0.0;
+  }
+}
