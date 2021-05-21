@@ -11,17 +11,15 @@ void euclidean_dist_baseline(Matrix *X, Matrix *D);
 
 
 void affinities_baseline(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
-
   int n = Y->nrows;
 
-  // calculate squared Euclidean distances
   MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
-  double sum = 0;
+  double sum = 0.0;
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
-      double value = 1 / (1 + D->data[i * n + j]);
+      double value = 1.0 / (1 + D->data[i * n + j]);
       Q_numerators->data[i * n + j] = value;
       Q_numerators->data[j * n + i] = value;
       sum += value;
@@ -29,18 +27,18 @@ void affinities_baseline(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) 
   }
 
   // set diagonal elements
-  for (int i = 0; i < n; i++){
+  for (int i = 0; i < n; i++) {
     Q->data[i * n + i] = 0;
   }
 
-  // normalise
+  // because triangular matrix
+  sum *= 2.0;
+
+  double norm = 1.0 / sum;
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
       double value = Q_numerators->data[i * n + j];
-      value = 0.5 / sum * value;  // multiplication by 0.5, as sum only sum of
-                                  // upper triangle elements
-
-      // ensure minimum probability
+      value *= norm;
       if (value < kMinimumProbability) {
         value = kMinimumProbability;
       }
