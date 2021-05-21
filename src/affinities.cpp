@@ -75,7 +75,7 @@ void affinities_no_triangle(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   }
 }
 
-void affinities_unroll_fst(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+void affinities_unroll_fst_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
   MY_EUCLIDEAN_DIST(Y, D);
@@ -124,7 +124,7 @@ void affinities_unroll_fst(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D
   }
 }
 
-void affinities_unroll_snd(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+void affinities_unroll_snd_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
   MY_EUCLIDEAN_DIST(Y, D);
@@ -176,6 +176,94 @@ void affinities_unroll_snd(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D
       Q->data[i * n + j + 1] = value_2;
       Q->data[i * n + j + 2] = value_3;
       Q->data[i * n + j + 3] = value_4;
+    }
+    for (int j = end; j < n; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
+
+void affinities_unroll_snd_8(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum = 0.0;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum += value;
+    }
+  }
+
+  double norm = 0.5 / upper_sum;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;  // first 32-byte aligned address after i
+    int end = begin + (n - begin) / 8 * 8;
+    for (int j = i + 1; j < begin; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+    // the bottleneck is multiplication with latency 4 and gap 0.5 -> unroll by 8
+    for (int j = begin; j < end; j += 8) {
+      double value_1 = Q_numerators->data[i * n + j];
+      double value_2 = Q_numerators->data[i * n + j + 1];
+      double value_3 = Q_numerators->data[i * n + j + 2];
+      double value_4 = Q_numerators->data[i * n + j + 3];
+      double value_5 = Q_numerators->data[i * n + j + 4];
+      double value_6 = Q_numerators->data[i * n + j + 5];
+      double value_7 = Q_numerators->data[i * n + j + 6];
+      double value_8 = Q_numerators->data[i * n + j + 7];
+      value_1 *= norm;
+      value_2 *= norm;
+      value_3 *= norm;
+      value_4 *= norm;
+      value_5 *= norm;
+      value_6 *= norm;
+      value_7 *= norm;
+      value_8 *= norm;
+      if (value_1 < kMinimumProbability) {
+        value_1 = kMinimumProbability;
+      }
+      if (value_2 < kMinimumProbability) {
+        value_2 = kMinimumProbability;
+      }
+      if (value_3 < kMinimumProbability) {
+        value_3 = kMinimumProbability;
+      }
+      if (value_4 < kMinimumProbability) {
+        value_4 = kMinimumProbability;
+      }
+      if (value_5 < kMinimumProbability) {
+        value_5 = kMinimumProbability;
+      }
+      if (value_6 < kMinimumProbability) {
+        value_6 = kMinimumProbability;
+      }
+      if (value_7 < kMinimumProbability) {
+        value_7 = kMinimumProbability;
+      }
+      if (value_8 < kMinimumProbability) {
+        value_8 = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value_1;
+      Q->data[i * n + j + 1] = value_2;
+      Q->data[i * n + j + 2] = value_3;
+      Q->data[i * n + j + 3] = value_4;
+      Q->data[i * n + j + 4] = value_5;
+      Q->data[i * n + j + 5] = value_6;
+      Q->data[i * n + j + 6] = value_7;
+      Q->data[i * n + j + 7] = value_8;
     }
     for (int j = end; j < n; j++) {
       double value = Q_numerators->data[i * n + j];
