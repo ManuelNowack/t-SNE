@@ -6,12 +6,16 @@
 
 void euclidean_dist_baseline(Matrix *X, Matrix *D);
 
+#define MY_EUCLIDEAN_DIST(Y, D) euclidean_dist_baseline(Y, D)
+// #define MY_EUCLIDEAN_DIST(Y, D)
+
+
 void affinities_baseline(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
 
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double sum = 0;
@@ -50,7 +54,7 @@ void affinities_no_triangle(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double sum = 0;
@@ -82,7 +86,7 @@ void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double sum = 0;
@@ -142,7 +146,7 @@ void affinities_accumulator(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double acc[4] = {};
@@ -226,7 +230,7 @@ void affinities_accumulator_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerator
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double acc[4] = {};
@@ -306,7 +310,7 @@ void affinities_accumulator_fully_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_num
   int n = Y->nrows;
 
   // calculate squared Euclidean distances
-  euclidean_dist_baseline(Y, D);
+  MY_EUCLIDEAN_DIST(Y, D);
 
   // unnormalised perplexities
   double acc[16] = {};
