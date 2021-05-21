@@ -545,6 +545,106 @@ void affinities_vectorization_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matr
   }
 }
 
+void affinities_accumulator(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum = 0.0;
+  __m256d one = _mm256_set1_pd(1.0);
+  __m256d acc_a = _mm256_setzero_pd();
+  __m256d acc_b = _mm256_setzero_pd();
+  __m256d acc_c = _mm256_setzero_pd();
+  __m256d acc_d = _mm256_setzero_pd();
+  __m256d a, b, c, d;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 16 * 16;
+    for (int j = i + 1; j < begin; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum += value;
+    }
+    for (int j = begin; j < end; j += 16) {
+      a = _mm256_load_pd(D->data + i * n + j);
+      b = _mm256_load_pd(D->data + i * n + j + 4);
+      c = _mm256_load_pd(D->data + i * n + j + 8);
+      d = _mm256_load_pd(D->data + i * n + j + 12);
+      a = _mm256_add_pd(a, one);
+      b = _mm256_add_pd(b, one);
+      c = _mm256_add_pd(c, one);
+      d = _mm256_add_pd(d, one);
+      a = _mm256_div_pd(one, a);
+      b = _mm256_div_pd(one, b);
+      c = _mm256_div_pd(one, c);
+      d = _mm256_div_pd(one, d);
+      acc_a = _mm256_add_pd(acc_a, a);
+      acc_b = _mm256_add_pd(acc_b, b);
+      acc_c = _mm256_add_pd(acc_c, c);
+      acc_d = _mm256_add_pd(acc_d, d);
+      _mm256_store_pd(Q_numerators->data + i * n + j, a);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 4, b);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 8, c);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 12, d);
+    }
+    for (int j = end; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum += value;
+    }
+  }
+  double tmp[4];
+  _mm256_store_pd(tmp, acc_a);
+  upper_sum += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+  _mm256_store_pd(tmp, acc_b);
+  upper_sum += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+  _mm256_store_pd(tmp, acc_c);
+  upper_sum += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+  _mm256_store_pd(tmp, acc_d);
+  upper_sum += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+  double norm_scalar = 0.5 / upper_sum;
+  __m256d norm = _mm256_set1_pd(norm_scalar);
+  __m256d min_prob = _mm256_set1_pd(kMinimumProbability);
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 16 * 16;
+    for (int j = i + 1; j < begin; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+    for (int j = begin; j < end; j += 16) {
+      a = _mm256_load_pd(Q_numerators->data + i * n + j);
+      b = _mm256_load_pd(Q_numerators->data + i * n + j + 4);
+      c = _mm256_load_pd(Q_numerators->data + i * n + j + 8);
+      d = _mm256_load_pd(Q_numerators->data + i * n + j + 12);
+      a = _mm256_mul_pd(a, norm);
+      b = _mm256_mul_pd(b, norm);
+      c = _mm256_mul_pd(c, norm);
+      d = _mm256_mul_pd(d, norm);
+      a = _mm256_max_pd(a, min_prob);
+      b = _mm256_max_pd(b, min_prob);
+      c = _mm256_max_pd(c, min_prob);
+      d = _mm256_max_pd(d, min_prob);
+      _mm256_store_pd(Q->data + i * n + j, a);
+      _mm256_store_pd(Q->data + i * n + j + 4, b);
+      _mm256_store_pd(Q->data + i * n + j + 8, c);
+      _mm256_store_pd(Q->data + i * n + j + 12, d);
+    }
+    for (int j = end; j < n; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
 void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
 
   int n = Y->nrows;
