@@ -304,6 +304,90 @@ void affinities_unroll_snd_8(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix 
   }
 }
 
+void affinities_unroll_both(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum = 0.0;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 4 * 4;
+    for (int j = i + 1; j < begin; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum += value;
+    }
+    for (int j = begin; j < end; j += 4) {
+      double value_1 = 1.0 / (1 + D->data[i * n + j]);
+      double value_2 = 1.0 / (1 + D->data[i * n + j + 1]);
+      double value_3 = 1.0 / (1 + D->data[i * n + j + 2]);
+      double value_4 = 1.0 / (1 + D->data[i * n + j + 3]);
+      Q_numerators->data[i * n + j] = value_1;
+      Q_numerators->data[i * n + j + 1] = value_2;
+      Q_numerators->data[i * n + j + 2] = value_3;
+      Q_numerators->data[i * n + j + 3] = value_4;
+      upper_sum += value_1;
+      upper_sum += value_2;
+      upper_sum += value_3;
+      upper_sum += value_4;
+    }
+    for (int j = end; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum += value;
+    }
+  }
+
+  double norm = 0.5 / upper_sum;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 4 * 4;
+    for (int j = i + 1; j < begin; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+    for (int j = begin; j < end; j += 4) {
+      double value_1 = Q_numerators->data[i * n + j];
+      double value_2 = Q_numerators->data[i * n + j + 1];
+      double value_3 = Q_numerators->data[i * n + j + 2];
+      double value_4 = Q_numerators->data[i * n + j + 3];
+      value_1 *= norm;
+      value_2 *= norm;
+      value_3 *= norm;
+      value_4 *= norm;
+      if (value_1 < kMinimumProbability) {
+        value_1 = kMinimumProbability;
+      }
+      if (value_2 < kMinimumProbability) {
+        value_2 = kMinimumProbability;
+      }
+      if (value_3 < kMinimumProbability) {
+        value_3 = kMinimumProbability;
+      }
+      if (value_4 < kMinimumProbability) {
+        value_4 = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value_1;
+      Q->data[i * n + j + 1] = value_2;
+      Q->data[i * n + j + 2] = value_3;
+      Q->data[i * n + j + 3] = value_4;
+    }
+    for (int j = end; j < n; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
+
 void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
 
   int n = Y->nrows;
