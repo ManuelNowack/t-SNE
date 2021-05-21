@@ -75,6 +75,34 @@ void affinities_no_triangle(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   }
 }
 
+// incorrect output but reduces transfered bytes by 25%
+void affinities_no_Q_numerators(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum = 0.0;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q->data[i * n + j] = value;
+      upper_sum += value;
+    }
+  }
+
+  double norm = 0.5 / upper_sum;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double value = Q->data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
+
 void affinities_unroll_fst_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
