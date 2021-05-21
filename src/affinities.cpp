@@ -75,7 +75,7 @@ void affinities_no_triangle(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   }
 }
 
-// incorrect output but reduces transfered bytes by 25%
+// incorrect output but reduces transferred bytes by 25%
 void affinities_no_Q_numerators(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
@@ -178,7 +178,7 @@ void affinities_unroll_snd_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix 
       }
       Q->data[i * n + j] = value;
     }
-    // the bottleneck is multiplication with latency 4 and gap 0.5 -> unroll by 8
+    // the bottleneck is multiplication with latency 4 and gap 0.5 -> unroll by 8?
     for (int j = begin; j < end; j += 4) {
       double value_1 = Q_numerators->data[i * n + j];
       double value_2 = Q_numerators->data[i * n + j + 1];
@@ -453,6 +453,7 @@ void affinities_vectorization(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
   }
 }
 
+// incorrect output but reduces transferred bytes by 25%
 void affinities_vectorization_no_Q_numerators(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
   int n = Y->nrows;
 
