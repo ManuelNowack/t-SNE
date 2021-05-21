@@ -388,6 +388,163 @@ void affinities_unroll_both(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   }
 }
 
+void affinities_vectorization(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum_scalar = 0.0;
+  __m256d one = _mm256_set1_pd(1.0);
+  __m256d upper_sum = _mm256_setzero_pd();
+  __m256d a;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 4 * 4;
+    for (int j = i + 1; j < begin; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum_scalar += value;
+    }
+    for (int j = begin; j < end; j += 4) {
+      a = _mm256_load_pd(D->data + i * n + j);
+      a = _mm256_add_pd(a, one);
+      a = _mm256_div_pd(one, a);
+      upper_sum = _mm256_add_pd(upper_sum, a);
+      _mm256_store_pd(Q_numerators->data + i * n + j, a);
+    }
+    for (int j = end; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum_scalar += value;
+    }
+  }
+  double tmp[4];
+  _mm256_store_pd(tmp, upper_sum);
+  upper_sum_scalar += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+  double norm_scalar = 0.5 / upper_sum_scalar;
+  __m256d norm = _mm256_set1_pd(norm_scalar);
+  __m256d min_prob = _mm256_set1_pd(kMinimumProbability);
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 4 * 4;
+    for (int j = i + 1; j < begin; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+    for (int j = begin; j < end; j += 4) {
+      a = _mm256_load_pd(Q_numerators->data + i * n + j);
+      a = _mm256_mul_pd(a, norm);
+      a = _mm256_max_pd(a, min_prob);
+      _mm256_store_pd(Q->data + i * n + j, a);
+    }
+    for (int j = end; j < n; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
+
+void affinities_vectorization_4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+  int n = Y->nrows;
+
+  MY_EUCLIDEAN_DIST(Y, D);
+
+  double upper_sum_scalar = 0.0;
+  __m256d one = _mm256_set1_pd(1.0);
+  __m256d upper_sum = _mm256_setzero_pd();
+  __m256d a, b, c, d;
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 16 * 16;
+    for (int j = i + 1; j < begin; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum_scalar += value;
+    }
+    for (int j = begin; j < end; j += 16) {
+      a = _mm256_load_pd(D->data + i * n + j);
+      b = _mm256_load_pd(D->data + i * n + j + 4);
+      c = _mm256_load_pd(D->data + i * n + j + 8);
+      d = _mm256_load_pd(D->data + i * n + j + 12);
+      a = _mm256_add_pd(a, one);
+      b = _mm256_add_pd(b, one);
+      c = _mm256_add_pd(c, one);
+      d = _mm256_add_pd(d, one);
+      a = _mm256_div_pd(one, a);
+      b = _mm256_div_pd(one, b);
+      c = _mm256_div_pd(one, c);
+      d = _mm256_div_pd(one, d);
+      upper_sum = _mm256_add_pd(upper_sum, a);
+      upper_sum = _mm256_add_pd(upper_sum, b);
+      upper_sum = _mm256_add_pd(upper_sum, c);
+      upper_sum = _mm256_add_pd(upper_sum, d);
+      _mm256_store_pd(Q_numerators->data + i * n + j, a);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 4, b);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 8, c);
+      _mm256_store_pd(Q_numerators->data + i * n + j + 12, d);
+    }
+    for (int j = end; j < n; j++) {
+      double value = 1.0 / (1 + D->data[i * n + j]);
+      Q_numerators->data[i * n + j] = value;
+      upper_sum_scalar += value;
+    }
+  }
+  double tmp[4];
+  _mm256_store_pd(tmp, upper_sum);
+  upper_sum_scalar += tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+  double norm_scalar = 0.5 / upper_sum_scalar;
+  __m256d norm = _mm256_set1_pd(norm_scalar);
+  __m256d min_prob = _mm256_set1_pd(kMinimumProbability);
+  for (int i = 0; i < n; i++) {
+    int begin = (i + 4) / 4 * 4;
+    int end = begin + (n - begin) / 16 * 16;
+    for (int j = i + 1; j < begin; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+    for (int j = begin; j < end; j += 16) {
+      a = _mm256_load_pd(Q_numerators->data + i * n + j);
+      b = _mm256_load_pd(Q_numerators->data + i * n + j + 4);
+      c = _mm256_load_pd(Q_numerators->data + i * n + j + 8);
+      d = _mm256_load_pd(Q_numerators->data + i * n + j + 12);
+      a = _mm256_mul_pd(a, norm);
+      b = _mm256_mul_pd(b, norm);
+      c = _mm256_mul_pd(c, norm);
+      d = _mm256_mul_pd(d, norm);
+      a = _mm256_max_pd(a, min_prob);
+      b = _mm256_max_pd(b, min_prob);
+      c = _mm256_max_pd(c, min_prob);
+      d = _mm256_max_pd(d, min_prob);
+      _mm256_store_pd(Q->data + i * n + j, a);
+      _mm256_store_pd(Q->data + i * n + j + 4, b);
+      _mm256_store_pd(Q->data + i * n + j + 8, c);
+      _mm256_store_pd(Q->data + i * n + j + 12, d);
+    }
+    for (int j = end; j < n; j++) {
+      double value = Q_numerators->data[i * n + j];
+      value *= norm_scalar;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      Q->data[i * n + j] = value;
+    }
+  }
+}
+
 void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
 
   int n = Y->nrows;
