@@ -41,8 +41,9 @@ void affinities_baseline(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) 
                                   // upper triangle elements
 
       // ensure minimum probability
-      if (value < 1e-12) value = 1e-12;
-
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
       Q->data[i * n + j] = value;
       Q->data[j * n + i] = value;
     }
@@ -74,7 +75,9 @@ void affinities_no_triangle(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
                                   // upper triangle elements
 
       // ensure minimum probability
-      if (value < 1e-12) value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
 
       Q->data[i * n + j] = value;
     }
@@ -100,7 +103,7 @@ void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D
   // normalise
   double norm = 0.5 / sum;  // 1 / (2 * sum) because triangular matrix
   __m256d _norm = _mm256_set1_pd(norm);
-  __m256d _min_prob = _mm256_set1_pd(1e-12);
+  __m256d _min_prob = _mm256_set1_pd(kMinimumProbability);
   __m256d _a, _b, _c, _d;
   for (int i = 0; i < n; i++) {
     // begin and end of 32-byte aligned addresses after i
@@ -126,15 +129,15 @@ void affinities_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D
     }
     for (int j = i + 1; j < begin; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
     for (int j = end; j < n; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
@@ -184,7 +187,7 @@ void affinities_accumulator(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
   // normalise
   double norm = 0.5 / sum;  // 1 / (2 * sum) because triangular matrix
   __m256d _norm = _mm256_set1_pd(norm);
-  __m256d _min_prob = _mm256_set1_pd(1e-12);
+  __m256d _min_prob = _mm256_set1_pd(kMinimumProbability);
   __m256d _a, _b, _c, _d;
   for (int i = 0; i < n; i++) {
     // begin and end of 32-byte aligned addresses after i
@@ -210,15 +213,15 @@ void affinities_accumulator(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
     }
     for (int j = i + 1; j < begin; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
     for (int j = end; j < n; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
@@ -264,7 +267,7 @@ void affinities_accumulator_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerator
   // normalise
   double norm = 0.5 / sum;  // 1 / (2 * sum) because triangular matrix
   __m256d _norm = _mm256_set1_pd(norm);
-  __m256d _min_prob = _mm256_set1_pd(1e-12);
+  __m256d _min_prob = _mm256_set1_pd(kMinimumProbability);
   __m256d _a, _b, _c, _d;
   for (int i = 0; i < n; i++) {
     // begin and end of 32-byte aligned addresses after i
@@ -290,15 +293,15 @@ void affinities_accumulator_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_numerator
     }
     for (int j = i + 1; j < begin; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
     for (int j = end; j < n; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
@@ -368,7 +371,7 @@ void affinities_accumulator_fully_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_num
   // normalise
   double norm = 0.5 / sum;  // 1 / (2 * sum) because triangular matrix
   __m256d _norm = _mm256_set1_pd(norm);
-  __m256d _min_prob = _mm256_set1_pd(1e-12);
+  __m256d _min_prob = _mm256_set1_pd(kMinimumProbability);
   __m256d _a, _b, _c, _d;
   for (int i = 0; i < n; i++) {
     // begin and end of 32-byte aligned addresses after i
@@ -394,15 +397,15 @@ void affinities_accumulator_fully_vectorized(Matrix *Y, Matrix *Q, Matrix *Q_num
     }
     for (int j = i + 1; j < begin; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }
     for (int j = end; j < n; j++) {
       double value = Q_numerators->data[i * n + j] * norm;
-      if (value < 1e-12) {
-        value = 1e-12;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
     }

@@ -9,5 +9,6 @@ constexpr double kEta = 500;
 constexpr double kMinGain = 0.01;
 constexpr double kPerplexityTarget = 20;
 constexpr double kPerplexityTolerance = 1e-5;
+constexpr double kMinimumProbability = 1e-12;
 
 #endif  // TSNE_HYPERPARAMS_H_
