@@ -1,5 +1,6 @@
 #include <tsne/grad_descent.h>
 #include <tsne/baseline.h>
+#include <immintrin.h>
 
 void grad_desc_b(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                  double momentum)
@@ -593,6 +594,7 @@ void grad_desc_accumulators(Matrix *Y, tsne_var_t *var, int n, int n_dim, double
         double ydatatwoi = ydata[twoi];
         double ydatatwoip1 = ydata[twoi+1];
         double tmp1, tmp2;
+        //try blocking approach?
         for (int j = 0; j < n; j+=2){
             tmp1 = (pdata[i * n + j] - qdata[i * n + j]) * q_numdata[i * n + j];
             tmp2 = (pdata[i * n + j+1] - qdata[i * n + j+1]) * q_numdata[i * n + j+1];
@@ -652,5 +654,93 @@ void grad_desc_accumulators(Matrix *Y, tsne_var_t *var, int n, int n_dim, double
         ydata[i+1] -= mean1;
         ydata[i+2] -= mean0;
         ydata[i+3] -= mean1;
+    }
+}
+
+void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum){
+    // calculate low-dimensional affinities
+    calc_affinities(Y, &var->Q, &var->Q_numerators, &var->D);
+    double *pdata = var->P.data;
+    double *qdata = var->Q.data;
+    double *q_numdata = var->Q_numerators.data;
+    double *ydata = Y->data;
+    double *gainsdata = var->gains.data;
+    double *ydeltadata = var->Y_delta.data;
+
+    //calculate gradient with respect to embeddings Y
+    int twoi = 0;
+    for (int i = 0; i < n; i++){
+        double value0 = 0;
+        double value1 = 0;
+        double value2 = 0;
+        double value3 = 0;
+        int twoj = 0;
+        double ydatatwoi = ydata[twoi];
+        double ydatatwoip1 = ydata[twoi+1];
+        double tmp1, tmp2;
+        for (int j = 0; j < n; j+=2){
+            tmp1 = (pdata[i * n + j] - qdata[i * n + j]) * q_numdata[i * n + j];
+            tmp2 = (pdata[i * n + j+1] - qdata[i * n + j+1]) * q_numdata[i * n + j+1];
+            value0 += tmp1 * (ydatatwoi - ydata[twoj]);
+            value1 += tmp1 * (ydatatwoip1 - ydata[twoj + 1]);
+            value2 += tmp2 * (ydatatwoi - ydata[twoj+2]);
+            value3 += tmp2 * (ydatatwoip1 - ydata[twoj + 3]);
+            twoj += 4;
+        }
+        value0 += value2;
+        value1 += value3;
+
+        // calculate gains, according to adaptive heuristic of Python implementation
+        double ydeltadata2i = ydeltadata[twoi];
+        double ydeltadata2ip1 = ydeltadata[twoi+1];
+        bool positive_grad0 = ((value0) > 0);
+        bool positive_delta0 = (ydeltadata2i > 0);
+        bool positive_grad1 = ((value1) > 0);
+        bool positive_delta1 = (ydeltadata2ip1 > 0);
+        double val0 = gainsdata[twoi];
+        double val1 = gainsdata[twoi+1];
+
+        val0 = (positive_grad0 == positive_delta0) ? val0 * 0.8 : val0 + 0.2;
+        val1 = (positive_grad1 == positive_delta1) ? val1 * 0.8 : val1 + 0.2;
+        if (val0 < kMinGain){ val0 = kMinGain; }
+        if (val1 < kMinGain){ val1 = kMinGain; }
+
+        gainsdata[twoi] = val0;
+        gainsdata[twoi+1] = val1;
+        ydeltadata[twoi] = momentum * ydeltadata2i - fourkEta * val0 * value0;
+        ydeltadata[twoi+1] = momentum * ydeltadata2ip1 - fourkEta * val1 * value1;
+
+        twoi += 2;
+    }
+
+    __m256d mean = {0,0,0,0};
+    __m256d n_vec = {n,n,n,n};
+    __m256d y, ydelta, mean_shuffled, mean_shuffled2;
+    int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
+    int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
+    int mean_last_mask = 0b0110;
+    int twon = 2*n;
+    for(int i=0; i<twon; i+=4){
+        //load y, ydelta
+        y = _mm256_load_pd(ydata+i);
+        ydelta = _mm256_load_pd(ydeltadata+i);
+        
+        //update step
+        y = _mm256_add_pd(y, ydelta);
+        mean = _mm256_add_pd(mean, y);
+
+        _mm256_store_pd(ydata+i, y);
+    }
+    mean_shuffled = _mm256_permute4x64_pd(mean, mean_mask);
+    mean_shuffled2 = _mm256_permute4x64_pd(mean, mean_mask2);
+    mean = _mm256_hadd_pd(mean_shuffled2, mean_shuffled); //mean now holds [mean0 mean1 mean1 mean0]
+    mean = _mm256_permute_pd(mean, mean_last_mask);
+    // take mean
+    mean = _mm256_div_pd(mean, n_vec);
+    // center
+    for (int i = 0; i < twon; i+=4){
+        y = _mm256_load_pd(ydata+i);
+        y = _mm256_sub_pd(y, mean);
+        _mm256_store_pd(ydata+i, y);
     }
 }

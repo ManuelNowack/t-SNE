@@ -35,5 +35,5 @@ int main(int argc, char **argv) {
     tsne_var_t var;
     create_tsne_variables(var, X.nrows, 2);
     joint_probs_baseline(&X, &var.P, &var.D);
-    test_grad_desc(grad_desc_accumulators, &Y, &var, X.nrows, 2, 0.8);
+    test_grad_desc(grad_desc_vectorized, &Y, &var, X.nrows, 2, 0.8);
 }
