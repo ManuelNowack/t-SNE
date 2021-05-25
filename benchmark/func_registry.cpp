@@ -10,6 +10,7 @@ joint_probs_func_t joint_probs_baseline;
 // Put all grad_desc function declarations here.
 grad_desc_func_t grad_desc_b;
 grad_desc_func_t grad_desc_accumulators;
+grad_desc_func_t grad_desc_vec_bottom;
 grad_desc_func_t grad_desc_vectorized;
 
 void register_functions() {
@@ -28,5 +29,6 @@ void register_functions() {
   // Put all grad_desc functions to test here.
   grad_desc_func_registry.add_function(&grad_desc_b, "grad_desc_baseline");
   grad_desc_func_registry.add_function(&grad_desc_accumulators, "grad_desc_accumulators");
-   grad_desc_func_registry.add_function(&grad_desc_vectorized, "grad_desc_vectorized");
+  grad_desc_func_registry.add_function(&grad_desc_vec_bottom, "grad_desc_vec_bottom");
+  grad_desc_func_registry.add_function(&grad_desc_vectorized, "grad_desc_vectorized");
 }

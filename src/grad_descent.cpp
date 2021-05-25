@@ -2,6 +2,22 @@
 #include <tsne/baseline.h>
 #include <immintrin.h>
 
+static void printvec(__m256d v){
+    double p[4] = {0,0,0,0};
+    _mm256_store_pd(p, v);
+    printf("vec: %.10f %.10f %.10f %.10f\n", p[0],p[1], p[2], p[3]);
+}
+
+static int check(__m256d v, double d1, double d2, double d3, double d4){
+    double p[4] = {0,0,0,0};
+    _mm256_store_pd(p, v);
+    if(p[0] != d1){ printf("First: %.10f != %.10f!\n", p[0], d1); return 1;}
+    if(p[1] != d2){ printf("Second: %.10f != %.10f!\n", p[1], d2); return 1;}
+    if(p[2] != d3){ printf("Third: %.10f != %.10f!\n", p[2], d3); return 1;}
+    if(p[3] != d4){ printf("Fourth: %.10f != %.10f!\n", p[3], d4); return 1;}
+    return 0;
+}
+
 void grad_desc_b(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                  double momentum)
 {
@@ -657,7 +673,7 @@ void grad_desc_accumulators(Matrix *Y, tsne_var_t *var, int n, int n_dim, double
     }
 }
 
-void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum){
+void grad_desc_vec_bottom(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum){
     // calculate low-dimensional affinities
     calc_affinities(Y, &var->Q, &var->Q_numerators, &var->D);
     double *pdata = var->P.data;
@@ -669,117 +685,49 @@ void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
 
     //calculate gradient with respect to embeddings Y
     int twoi = 0;
-    int ymask = 0b11011000; //switch elements at pos 1 and 2
-    for (int i = 0; i < n; i+=4){
-        __m256d value_left = {0, 0, 0, 0};
-        __m256d value_right = {0, 0, 0, 0};
-        __m256d zero = {0,0,0,0};
-
+    for (int i = 0; i < n; i++){
+        double value0 = 0;
+        double value1 = 0;
+        double value2 = 0;
+        double value3 = 0;
         int twoj = 0;
-        __m256d tmp, p, q, qnum, ysingle_l, ysingle_r;
-        for (int j = 0; j < n; j+=4){
-            __m256d yleft, yright, y1, y2;
-            y1 = _mm256_load_pd(ydata+twoj);
-            y2 = _mm256_load_pd(ydata+twoj+4);
-            p = _mm256_load_pd(pdata+i*n+j);
-            q = _mm256_load_pd(qdata+i*n+j);
-            qnum = _mm256_load_pd(q_numdata+i*n+j);
-            //sort such that we have column wise 4 y elements
-            yleft = _mm256_unpacklo_pd(y1, y2);
-            yright = _mm256_unpackhi_pd(y1, y2);
-            yleft = _mm256_permute4x64_pd(yleft, ymask);
-            yright = _mm256_permute4x64_pd(yright, ymask);
-
-            //only doing one result TODO 4 (assume i++ only)
-            ysingle_l = _mm256_broadcast_sd(ydata+twoi);
-            ysingle_r = _mm256_broadcast_sd(ydata+twoi+1);            
-
-            tmp = _mm256_sub_pd(p, _mm256_mul_pd(q, qnum));
-            value_left = _mm256_mul_pd(tmp, _mm256_sub_pd(ysingle_l, yleft));
-            value_right = _mm256_mul_pd(tmp, _mm256_sub_pd(yright, ysingle_r));
-            twoj += 2;
+        double ydatatwoi = ydata[twoi];
+        double ydatatwoip1 = ydata[twoi+1];
+        double tmp1, tmp2;
+        //try blocking approach?
+        for (int j = 0; j < n; j+=2){
+            tmp1 = (pdata[i * n + j] - qdata[i * n + j]) * q_numdata[i * n + j];
+            tmp2 = (pdata[i * n + j+1] - qdata[i * n + j+1]) * q_numdata[i * n + j+1];
+            value0 += tmp1 * (ydatatwoi - ydata[twoj]);
+            value1 += tmp1 * (ydatatwoip1 - ydata[twoj + 1]);
+            value2 += tmp2 * (ydatatwoi - ydata[twoj+2]);
+            value3 += tmp2 * (ydatatwoip1 - ydata[twoj + 3]);
+            twoj += 4;
         }
-        printf("hi+%d\n", i);
+        value0 += value2;
+        value1 += value3;
 
         // calculate gains, according to adaptive heuristic of Python implementation
-        __m256d ydeltaleft, ydeltaright, ydelta1, ydelta2, pos_grad_left, 
-        pos_grad_right, pos_delta_left, pos_delta_right, gainsleft, gainsright, gains0, gains1;
-        ydelta1 = _mm256_load_pd(ydeltadata+twoi);
-        ydelta2 = _mm256_load_pd(ydeltadata+twoi+4);
-        //sort such that we have column wise 4 ydelta elements
-        ydeltaleft = _mm256_unpacklo_pd(ydelta1, ydelta2);
-        ydeltaright = _mm256_unpackhi_pd(ydelta1, ydelta2);
-        ydeltaleft = _mm256_permute4x64_pd(ydeltaleft, ymask);
-        ydeltaright = _mm256_permute4x64_pd(ydeltaright, ymask);
+        double ydeltadata2i = ydeltadata[twoi];
+        double ydeltadata2ip1 = ydeltadata[twoi+1];
+        bool positive_grad0 = ((value0) > 0);
+        bool positive_delta0 = (ydeltadata2i > 0);
+        bool positive_grad1 = ((value1) > 0);
+        bool positive_delta1 = (ydeltadata2ip1 > 0);
+        double val0 = gainsdata[twoi];
+        double val1 = gainsdata[twoi+1];
 
-        //compute boolean masks
-        pos_grad_left = _mm256_cmp_pd(value_left, zero, _CMP_GT_OQ);
-        pos_grad_right = _mm256_cmp_pd(value_right, zero, _CMP_GT_OQ);
-        pos_delta_left = _mm256_cmp_pd(ydeltaleft, zero, _CMP_GT_OQ);
-        pos_delta_right = _mm256_cmp_pd(ydeltaright, zero, _CMP_GT_OQ);
+        val0 = (positive_grad0 == positive_delta0) ? val0 * 0.8 : val0 + 0.2;
+        val1 = (positive_grad1 == positive_delta1) ? val1 * 0.8 : val1 + 0.2;
+        if (val0 < kMinGain){ val0 = kMinGain; }
+        if (val1 < kMinGain){ val1 = kMinGain; }
 
-        //load gains
-        gains0 = _mm256_load_pd(gainsdata+twoi);
-        gains1 = _mm256_load_pd(gainsdata+twoi+4);
+        gainsdata[twoi] = val0;
+        gainsdata[twoi+1] = val1;
+        ydeltadata[twoi] = momentum * ydeltadata2i - fourkEta * val0 * value0;
+        ydeltadata[twoi+1] = momentum * ydeltadata2ip1 - fourkEta * val1 * value1;
 
-        //sort gains into left and right
-        gainsleft = _mm256_unpacklo_pd(gains0, gains1);
-        gainsright = _mm256_unpackhi_pd(gains0, gains1);
-        gainsleft = _mm256_permute4x64_pd(gainsleft, ymask);
-        gainsright = _mm256_permute4x64_pd(gainsright, ymask);
-
-        __m256d gainsmul_left, gainsmul_right, gainsplus_left, gainsplus_right, mask_left, mask_right;
-        __m256d mulconst = {0.8, 0.8, 0.8, 0.8};
-        __m256d addconst = {0.2, 0.2, 0.2, 0.2};
-        gainsmul_left = _mm256_mul_pd(gainsleft, mulconst);
-        gainsmul_right = _mm256_mul_pd(gainsleft, mulconst);
-        gainsplus_left = _mm256_add_pd(gainsleft, addconst);
-        gainsplus_right = _mm256_add_pd(gainsright, addconst);
-        mask_left = _mm256_cmp_pd(pos_grad_left, pos_delta_left, _CMP_EQ_OQ);
-        mask_right = _mm256_cmp_pd(pos_grad_right, pos_delta_right, _CMP_EQ_OQ);
-
-        gainsmul_left = _mm256_and_pd(mask_left, gainsmul_left);
-        gainsmul_right = _mm256_and_pd(mask_right, gainsmul_right);
-        gainsplus_left = _mm256_andnot_pd(mask_left, gainsplus_left);
-        gainsplus_right = _mm256_andnot_pd(mask_right, gainsplus_right);
-
-        gainsleft = _mm256_or_pd(gainsmul_left, gainsplus_left);
-        gainsright = _mm256_or_pd(gainsmul_right, gainsplus_right);
-
-        __m256d kmask_left, kmask_right;
-        __m256d kmin = {kMinGain, kMinGain, kMinGain, kMinGain};
-        kmask_left = _mm256_cmp_pd(gainsleft, kmin, _CMP_LT_OQ);
-        kmask_right = _mm256_cmp_pd(gainsright, kmin, _CMP_LT_OQ);
-        gainsleft = _mm256_blendv_pd(gainsleft, kmin, kmask_left);
-        gainsright = _mm256_blendv_pd(gainsright, kmin, kmask_right);
-
-        //unsort again
-        gains0 = _mm256_permute4x64_pd(gainsleft, ymask);
-        gains1 = _mm256_permute4x64_pd(gainsright, ymask);
-        gains0 = _mm256_unpacklo_pd(gains0, gains1);
-        gains1 = _mm256_unpackhi_pd(gains0, gains1);
-
-        _mm256_store_pd(gainsdata+twoi, gains0);
-        _mm256_store_pd(gainsdata+twoi+4, gains1);
-
-        __m256d momentum_v = {momentum, momentum, momentum, momentum};
-        __m256d fourketa = {fourkEta, fourkEta, fourkEta, fourkEta};
-        gainsleft = _mm256_mul_pd(fourketa, gainsleft);
-        gainsright = _mm256_mul_pd(fourketa, gainsright);
-        gainsleft = _mm256_mul_pd(gainsleft, value_left);
-        gainsright = _mm256_mul_pd(gainsright, value_right);
-        ydeltaleft = _mm256_fmsub_pd(momentum_v, ydeltaleft, gainsleft);
-        ydeltaright = _mm256_fmsub_pd(momentum_v, ydeltaright, gainsright);
-
-        ydelta1 = _mm256_permute4x64_pd(ydeltaleft, ymask);
-        ydelta2 = _mm256_permute4x64_pd(ydeltaright, ymask);
-        ydelta1 = _mm256_unpacklo_pd(ydelta1, ydelta2);
-        ydelta2 = _mm256_unpackhi_pd(ydelta1, ydelta2);
-
-        _mm256_store_pd(ydeltadata+twoi, ydelta1);
-        _mm256_store_pd(ydeltadata+twoi+4, ydelta2);
-
-        twoi += 8;
+        twoi += 2;
     }
 
     __m256d mean = {0,0,0,0};
@@ -814,23 +762,7 @@ void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
     }
 }
 
-static void printvec(__m256d v){
-    double p[4] = {0,0,0,0};
-    _mm256_store_pd(p, v);
-    printf("vec: %lf %lf %lf %lf\n", p[0],p[1], p[2], p[3]);
-}
-
-static int check(__m256d v, double d1, double d2, double d3, double d4){
-    double p[4] = {0,0,0,0};
-    _mm256_store_pd(p, v);
-    if(p[0] != d1){ printf("First: %.10f != %.10f!\n", p[0], d1); return 1;}
-    if(p[1] != d2){ printf("Second: %.10f != %.10f!\n", p[1], d2); return 1;}
-    if(p[2] != d3){ printf("Third: %.10f != %.10f!\n", p[2], d3); return 1;}
-    if(p[3] != d4){ printf("Fourth: %.10f != %.10f!\n", p[3], d4); return 1;}
-    return 0;
-}
-
-void grad_desc_tmp(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum){
+void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum){
     // calculate low-dimensional affinities
     calc_affinities(Y, &var->Q, &var->Q_numerators, &var->D);
 
@@ -844,16 +776,28 @@ void grad_desc_tmp(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum
 
     //calculate gradient with respect to embeddings Y
     int twoi = 0;
-    for (int i = 0; i < n; i++){
-        double value0 = 0;
-        double value1 = 0;
+    __m256d zero = {0,0,0,0};
+    for (int i = 0; i < n; i+=4){
         int twoj = 0;
-        __m256d yleft, yright, y1, y2, yfixleft, yfixright;
-        __m256d valueleft = _mm256_setzero_pd();
-        __m256d valueright = _mm256_setzero_pd();
-        yfixleft = _mm256_broadcast_sd(ydata+twoi);
-        yfixright = _mm256_broadcast_sd(ydata+twoi+1);
+        __m256d yleft, yright, y1, y2, yfixleft1, yfixleft2, yfixleft3, yfixleft4, yfixright1, yfixright2, yfixright3, yfixright4;
+        __m256d valueleft1 = _mm256_setzero_pd();
+        __m256d valueright1 = _mm256_setzero_pd();
+        __m256d valueleft2 = _mm256_setzero_pd();
+        __m256d valueright2 = _mm256_setzero_pd();
+        __m256d valueleft3 = _mm256_setzero_pd();
+        __m256d valueright3 = _mm256_setzero_pd();
+        __m256d valueleft4 = _mm256_setzero_pd();
+        __m256d valueright4 = _mm256_setzero_pd();
+        yfixleft1 = _mm256_broadcast_sd(ydata+twoi);
+        yfixleft2 = _mm256_broadcast_sd(ydata+twoi+2);
+        yfixleft3 = _mm256_broadcast_sd(ydata+twoi+4);
+        yfixleft4 = _mm256_broadcast_sd(ydata+twoi+6);
+        yfixright1 = _mm256_broadcast_sd(ydata+twoi+1);
+        yfixright2 = _mm256_broadcast_sd(ydata+twoi+3);
+        yfixright3 = _mm256_broadcast_sd(ydata+twoi+5);
+        yfixright4 = _mm256_broadcast_sd(ydata+twoi+7);
         for (int j = 0; j < n; j+=4){
+            __m256d p1, p2, p3, p4, q1, q2, q3, q4, qnum1, qnum2, qnum3, qnum4, tmp1, tmp2, tmp3, tmp4;
             y1 = _mm256_load_pd(ydata+twoj);
             y2 = _mm256_load_pd(ydata+twoj+4);
             //sort such that we have column wise 4 y elements
@@ -861,43 +805,118 @@ void grad_desc_tmp(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum
             yright = _mm256_unpackhi_pd(y1, y2);
             yleft = _mm256_permute4x64_pd(yleft, ymask);
             yright = _mm256_permute4x64_pd(yright, ymask);
-            __m256d p, q, qnum, tmp;
-            p = _mm256_load_pd(pdata+i*n+j);
-            q = _mm256_load_pd(qdata+i*n+j);
-            qnum = _mm256_load_pd(q_numdata+i*n+j);
+            p1 = _mm256_load_pd(pdata+i*n+j);
+            p2 = _mm256_load_pd(pdata+i*n+j+n);
+            p3 = _mm256_load_pd(pdata+i*n+j+2*n);
+            p4 = _mm256_load_pd(pdata+i*n+j+3*n);
+            q1 = _mm256_load_pd(qdata+i*n+j);
+            q2 = _mm256_load_pd(qdata+i*n+j+n);
+            q3 = _mm256_load_pd(qdata+i*n+j+2*n);
+            q4 = _mm256_load_pd(qdata+i*n+j+3*n);
+            qnum1 = _mm256_load_pd(q_numdata+i*n+j);
+            qnum2 = _mm256_load_pd(q_numdata+i*n+j+n);
+            qnum3 = _mm256_load_pd(q_numdata+i*n+j+2*n);
+            qnum4 = _mm256_load_pd(q_numdata+i*n+j+3*n);
             
-            tmp = _mm256_mul_pd(_mm256_sub_pd(p, q), qnum);
-            valueleft = _mm256_add_pd(_mm256_mul_pd(tmp, _mm256_sub_pd(yfixleft, yleft)), valueleft);
-            valueright = _mm256_add_pd(_mm256_mul_pd(tmp, _mm256_sub_pd(yfixright, yright)), valueright);
+            tmp1 = _mm256_mul_pd(_mm256_sub_pd(p1, q1), qnum1);
+            tmp2 = _mm256_mul_pd(_mm256_sub_pd(p2, q2), qnum2);
+            tmp3 = _mm256_mul_pd(_mm256_sub_pd(p3, q3), qnum3);
+            tmp4 = _mm256_mul_pd(_mm256_sub_pd(p4, q4), qnum4);
+            valueleft1 = _mm256_add_pd(_mm256_mul_pd(tmp1, _mm256_sub_pd(yfixleft1, yleft)), valueleft1);
+            valueleft2 = _mm256_add_pd(_mm256_mul_pd(tmp2, _mm256_sub_pd(yfixleft2, yleft)), valueleft2);
+            valueleft3 = _mm256_add_pd(_mm256_mul_pd(tmp3, _mm256_sub_pd(yfixleft3, yleft)), valueleft3);
+            valueleft4 = _mm256_add_pd(_mm256_mul_pd(tmp4, _mm256_sub_pd(yfixleft4, yleft)), valueleft4);
+            valueright1 = _mm256_add_pd(_mm256_mul_pd(tmp1, _mm256_sub_pd(yfixright1, yright)), valueright1);
+            valueright2 = _mm256_add_pd(_mm256_mul_pd(tmp2, _mm256_sub_pd(yfixright2, yright)), valueright2);
+            valueright3 = _mm256_add_pd(_mm256_mul_pd(tmp3, _mm256_sub_pd(yfixright3, yright)), valueright3);
+            valueright4 = _mm256_add_pd(_mm256_mul_pd(tmp4, _mm256_sub_pd(yfixright4, yright)), valueright4);
             twoj += 8;
         }
         
-        double *v = (double *)aligned_alloc(32, 4*sizeof(double));
-        _mm256_store_pd(v, _mm256_hadd_pd(valueleft, valueright));
-        value0 = v[0]+v[2];
-        value1 = v[1]+v[3];
+        double *v = (double *)aligned_alloc(32, 16*sizeof(double));
+        _mm256_store_pd(v, _mm256_hadd_pd(valueleft1, valueright1));
+        _mm256_store_pd(v+4, _mm256_hadd_pd(valueleft2, valueright2));
+        _mm256_store_pd(v+8, _mm256_hadd_pd(valueleft3, valueright3));
+        _mm256_store_pd(v+12, _mm256_hadd_pd(valueleft4, valueright4));
+        __m256d values_left, values_right;
+        values_left = _mm256_set_pd(v[12]+v[14], v[8]+v[10], v[4]+v[6], v[0]+v[2]);
+        values_right = _mm256_set_pd(v[13]+v[15], v[9]+v[11], v[5]+v[7], v[1]+v[3]);
 
-        // calculate gains, according to adaptive heuristic of Python implementation
-        double ydeltadata2i = ydeltadata[twoi];
-        double ydeltadata2ip1 = ydeltadata[twoi+1];
-        bool positive_grad0 = ((value0) > 0);
-        bool positive_delta0 = (ydeltadata2i > 0);
-        bool positive_grad1 = ((value1) > 0);
-        bool positive_delta1 = (ydeltadata2ip1 > 0);
-        double val0 = gainsdata[twoi];
-        double val1 = gainsdata[twoi+1];
 
-        val0 = (positive_grad0 == positive_delta0) ? val0 * 0.8 : val0 + 0.2;
-        val1 = (positive_grad1 == positive_delta1) ? val1 * 0.8 : val1 + 0.2;
-        if (val0 < kMinGain){ val0 = kMinGain; }
-        if (val1 < kMinGain){ val1 = kMinGain; }
+        __m256d ydeltaleft, ydeltaright, ydelta1, ydelta2, pos_grad_left, 
+        pos_grad_right, pos_delta_left, pos_delta_right, gainsleft, gainsright, gains0, gains1;
+        ydelta1 = _mm256_load_pd(ydeltadata+twoi);
+        ydelta2 = _mm256_load_pd(ydeltadata+twoi+4);
+        //sort such that we have column wise 4 ydelta elements
+        ydeltaleft = _mm256_unpacklo_pd(ydelta1, ydelta2);
+        ydeltaright = _mm256_unpackhi_pd(ydelta1, ydelta2);
+        ydeltaleft = _mm256_permute4x64_pd(ydeltaleft, ymask);
+        ydeltaright = _mm256_permute4x64_pd(ydeltaright, ymask);
 
-        gainsdata[twoi] = val0;
-        gainsdata[twoi+1] = val1;
-        ydeltadata[twoi] = momentum * ydeltadata2i - fourkEta * val0 * value0;
-        ydeltadata[twoi+1] = momentum * ydeltadata2ip1 - fourkEta * val1 * value1;
+        //compute boolean masks
+        pos_grad_left = _mm256_cmp_pd(values_left, zero, _CMP_GT_OQ);
+        pos_grad_right = _mm256_cmp_pd(values_right, zero, _CMP_GT_OQ);
+        pos_delta_left = _mm256_cmp_pd(ydeltaleft, zero, _CMP_GT_OQ);
+        pos_delta_right = _mm256_cmp_pd(ydeltaright, zero, _CMP_GT_OQ);
 
-        twoi += 2;
+        //load gains
+        gains0 = _mm256_load_pd(gainsdata+twoi);
+        gains1 = _mm256_load_pd(gainsdata+twoi+4);
+
+        //sort gains into left and right
+        gainsleft = _mm256_unpacklo_pd(gains0, gains1);
+        gainsright = _mm256_unpackhi_pd(gains0, gains1);
+        gainsleft = _mm256_permute4x64_pd(gainsleft, ymask);
+        gainsright = _mm256_permute4x64_pd(gainsright, ymask);
+
+        __m256d gainsmul_left, gainsmul_right, gainsplus_left, gainsplus_right, mask_left, mask_right;
+        __m256d mulconst = {0.8, 0.8, 0.8, 0.8};
+        __m256d addconst = {0.2, 0.2, 0.2, 0.2};
+        gainsmul_left = _mm256_mul_pd(gainsleft, mulconst);
+        gainsmul_right = _mm256_mul_pd(gainsright, mulconst);
+        gainsplus_left = _mm256_add_pd(gainsleft, addconst);
+        gainsplus_right = _mm256_add_pd(gainsright, addconst);
+        mask_left = _mm256_cmp_pd(pos_grad_left, pos_delta_left, _CMP_EQ_OQ);
+        mask_right = _mm256_cmp_pd(pos_grad_right, pos_delta_right, _CMP_EQ_OQ);
+
+        gainsmul_left = _mm256_and_pd(mask_left, gainsmul_left);
+        gainsmul_right = _mm256_and_pd(mask_right, gainsmul_right);
+        gainsplus_left = _mm256_andnot_pd(mask_left, gainsplus_left);
+        gainsplus_right = _mm256_andnot_pd(mask_right, gainsplus_right);
+
+        gainsleft = _mm256_or_pd(gainsmul_left, gainsplus_left);
+        gainsright = _mm256_or_pd(gainsmul_right, gainsplus_right);
+
+        __m256d kmask_left, kmask_right;
+        __m256d kmin = {kMinGain, kMinGain, kMinGain, kMinGain};
+        kmask_left = _mm256_cmp_pd(gainsleft, kmin, _CMP_LT_OQ);
+        kmask_right = _mm256_cmp_pd(gainsright, kmin, _CMP_LT_OQ);
+        gainsleft = _mm256_blendv_pd(gainsleft, kmin, kmask_left);
+        gainsright = _mm256_blendv_pd(gainsright, kmin, kmask_right);
+
+        //unsort again
+        gains0 = _mm256_permute4x64_pd(gainsleft, ymask);
+        gains1 = _mm256_permute4x64_pd(gainsright, ymask);
+
+        _mm256_store_pd(gainsdata+twoi, _mm256_unpacklo_pd(gains0, gains1));
+        _mm256_store_pd(gainsdata+twoi+4, _mm256_unpackhi_pd(gains0, gains1));
+
+        __m256d momentum_v = {momentum, momentum, momentum, momentum};
+        __m256d fourketa = {fourkEta, fourkEta, fourkEta, fourkEta};
+        gainsleft = _mm256_mul_pd(fourketa, gainsleft);
+        gainsright = _mm256_mul_pd(fourketa, gainsright);
+        gainsleft = _mm256_mul_pd(gainsleft, values_left);
+        gainsright = _mm256_mul_pd(gainsright, values_right);
+        ydeltaleft = _mm256_fmsub_pd(momentum_v, ydeltaleft, gainsleft);
+        ydeltaright = _mm256_fmsub_pd(momentum_v, ydeltaright, gainsright);
+
+        ydelta1 = _mm256_permute4x64_pd(ydeltaleft, ymask);
+        ydelta2 = _mm256_permute4x64_pd(ydeltaright, ymask);
+
+        _mm256_store_pd(ydeltadata+twoi, _mm256_unpacklo_pd(ydelta1, ydelta2));
+        _mm256_store_pd(ydeltadata+twoi+4, _mm256_unpackhi_pd(ydelta1, ydelta2));
+
+        twoi += 8;
     }
 
     __m256d mean = {0,0,0,0};

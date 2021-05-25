@@ -20,6 +20,6 @@ void grad_desc_loop_merge(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
 
 void grad_desc_accumulators(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
 void grad_desc_accumulators2(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
-void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
 
-void grad_desc_tmp(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
+void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
+void grad_desc_vec_bottom(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentum);
