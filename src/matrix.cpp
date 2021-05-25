@@ -54,6 +54,7 @@ Matrix load_matrix(const char *filepath) {
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory to store matrix.");
   }
+  memset(A.data, 0, A.nrows * A.ncols * sizeof(double));
   rewind(in_file);
   int i = 0;
   do {
@@ -100,6 +101,7 @@ Matrix create_matrix(int nrows, int ncols) {
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
+  memset(A.data, 0, A.nrows * A.ncols * sizeof(double));
 
   return A;
 }
