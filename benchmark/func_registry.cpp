@@ -9,6 +9,8 @@ void register_functions() {
       FuncRegistry<grad_desc_func_t>::get_instance();
   auto &log_perplexity_func_registry =
       FuncRegistry<log_perplexity_func_t>::get_instance();
+  auto &euclidean_dist_func_registry =
+      FuncRegistry<euclidean_dist_func_t>::get_instance();
 
   // Put all tsne functions to test here.
   tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
@@ -29,4 +31,8 @@ void register_functions() {
       .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
       .add_function(&log_perplexity_avx, "log_perplexity_avx")
       .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4");
+      
+  // Put all euclidean_dist functions to test here.
+  euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
+                                            "euclidean_dist_baseline");
 }

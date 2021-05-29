@@ -68,4 +68,10 @@ class LogPerplexityTest
     : public BaseTest,
       public testing::WithParamInterface<log_perplexity_func_t *> {};
 
+class EuclideanDistTest : public BaseTest,
+                          public testing::WithParamInterface<euclidean_dist_func_t *> {};
+
+class EuclideanDistLowTest : public BaseTest,
+                             public testing::WithParamInterface<euclidean_dist_func_t *> {};
+
 #endif  // TSNE_TEST_H_

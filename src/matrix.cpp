@@ -49,7 +49,7 @@ Matrix load_matrix(const char *filepath) {
   } while (character != EOF);
 
   // load data
-  posix_memalign((void **)&A.data, 32, A.nrows * A.ncols * sizeof(double));
+  A.data = (double *)aligned_alloc(32, A.nrows * A.ncols * sizeof(double));
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory to store matrix.");
   }
@@ -92,11 +92,9 @@ void store_matrix(const char *filepath, Matrix A) {
 }
 
 Matrix create_matrix(int nrows, int ncols) {
-  Matrix A = {.nrows = nrows, .ncols = ncols, .data = NULL};
-
-  size_t datasize = nrows * ncols * sizeof(double);
-  posix_memalign((void **)&A.data, 32, datasize);
-  memset(A.data, 0, datasize);
+  Matrix A = {.nrows = nrows,
+              .ncols = ncols,
+              .data = (double *)aligned_alloc(32, nrows * ncols * sizeof(double))};
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
@@ -112,7 +110,7 @@ void copy_matrix(Matrix *orig, Matrix *copy) {
   copy->ncols = orig->ncols;
   copy->nrows = orig->nrows;
   size_t datasize = copy->nrows * copy->ncols * sizeof(double);
-  posix_memalign((void **)&copy->data, 32, datasize);
+  copy->data = (double *)aligned_alloc(32, datasize);
   memcpy(copy->data, orig->data, datasize);
   if (!copy->data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
