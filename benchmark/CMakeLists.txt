@@ -1,3 +1,11 @@
 add_executable(benchmark main.cpp func_registry.cpp benchmark.cpp)
 target_compile_features(benchmark PRIVATE cxx_std_11)
 target_link_libraries(benchmark PRIVATE tsne_library)
+
+add_executable(benchmark_euclidean_dist main_euclidean_dist.cpp func_registry.cpp benchmark.cpp)
+target_compile_features(benchmark_euclidean_dist PRIVATE cxx_std_11)
+target_link_libraries(benchmark_euclidean_dist PRIVATE tsne_library)
+
+add_executable(benchmark_euclidean_dist_low main_euclidean_dist_low.cpp func_registry.cpp benchmark.cpp)
+target_compile_features(benchmark_euclidean_dist_low PRIVATE cxx_std_11)
+target_link_libraries(benchmark_euclidean_dist_low PRIVATE tsne_library)
