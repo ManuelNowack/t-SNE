@@ -11,7 +11,7 @@ target_link_libraries(benchmark
     PRIVATE benchmark_library
 )
 
-add_executable(perf_joint_probs perf_joint_probs.cpp)
+add_executable(perf_joint_probs main_joint_probs.cpp)
 target_link_libraries(perf_joint_probs
     PRIVATE benchmark_library
 )

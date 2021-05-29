@@ -65,8 +65,11 @@ int main(int argc, char **argv) {
   register_functions();
   auto &log_perplexity_func_registry =
       FuncRegistry<log_perplexity_func_t>::get_instance();
+  auto &joint_probs_func_registry =
+      FuncRegistry<joint_probs_func_t>::get_instance();
 
-  int n_measurement_series = log_perplexity_func_registry.num_funcs;
+  int n_measurement_series = log_perplexity_func_registry.num_funcs +
+                             joint_probs_func_registry.num_funcs;
   double performances[n_measurements][n_measurement_series];
 
   for (int i_measurement = 0; i_measurement < n_measurements; i_measurement++) {
@@ -87,12 +90,23 @@ int main(int argc, char **argv) {
       i_series++;
     }
 
+    for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
+      perf = perf_test_joint_probs(joint_probs_func_registry.funcs[i], X_sub);
+      cout << joint_probs_func_registry.func_names[i] << "," << perf << endl;
+      performances[i_measurement][i_series] = perf;
+      i_series++;
+    }
+
     cout << endl;
   }
 
   for (int i = 0; i < log_perplexity_func_registry.num_funcs; i++) {
-    cout << log_perplexity_func_registry.func_names[i];
-    if (i == log_perplexity_func_registry.num_funcs - 1) {
+    cout << log_perplexity_func_registry.func_names[i] << ", ";
+  }
+
+  for (int i = 0; i < joint_probs_func_registry.num_funcs; i++) {
+    cout << joint_probs_func_registry.func_names[i];
+    if (i == joint_probs_func_registry.num_funcs - 1) {
       cout << endl;
     } else {
       cout << ", ";

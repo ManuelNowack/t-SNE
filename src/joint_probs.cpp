@@ -1,0 +1,151 @@
+#include <immintrin.h>
+#include <math.h>
+#include <tsne/debug.h>
+#include <tsne/func_registry.h>
+#include <tsne/hyperparams.h>
+#include <tsne/matrix.h>
+#include <vectorclass/vectormath_exp.h>
+
+void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
+  int n = X->nrows;
+
+  euclidean_dist_baseline(X, D);
+
+  double target_log_perplexity = log(kPerplexityTarget);
+
+  // initialise precisions to 1
+  double precisions[n];
+  for (int i = 0; i < n; i++) {
+    precisions[i] = 1;
+  }
+
+  // loop over all datapoints to determine precision and corresponding
+  // probabilities
+  for (int i = 0; i < n; i++) {
+    double precision_min = 0.0;
+    double precision_max = HUGE_VAL;
+    double *distances = &D->data[i * n];
+    double *probabilities = &P->data[i * n];
+
+    // bisection method for a fixed number of iterations
+    double actual_log_perplexity, normalizer, diff;
+    for (int iter = 0; iter < kJointProbsMaxIter; iter++) {
+      log_perplexity_unroll8(distances, probabilities, n, i, precisions[i],
+                             &actual_log_perplexity, &normalizer);
+      diff = actual_log_perplexity - target_log_perplexity;
+
+      if (diff > 0) {
+        // precision should be increased
+        precision_min = precisions[i];
+        if (precision_max == HUGE_VAL) {
+          precisions[i] *= 2;
+        } else {
+          precisions[i] = 0.5 * (precisions[i] + precision_max);
+        }
+      } else {
+        // precision should be decreased
+        precision_max = precisions[i];
+        if (precision_min == 0.0) {
+          precisions[i] /= 2;
+        } else {
+          precisions[i] = 0.5 * (precisions[i] + precision_min);
+        }
+      }
+    }
+
+    // normalize probabilities
+    for (int i = 0; i < n; i++) {
+      probabilities[i] = probabilities[i] / normalizer;
+    }
+  }
+
+  // convert conditional probabilties to joint probabilities
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double a = P->data[i * n + j];
+      double b = P->data[j * n + i];
+      double prob = (a + b) / (2 * n);
+
+      // early exaggeration
+      prob *= 4;
+
+      // ensure minimal probability
+      if (prob < 1e-12) prob = 1e-12;
+
+      P->data[i * n + j] = prob;
+      P->data[j * n + i] = prob;
+    }
+  }
+}
+
+void joint_probs_avx_fma_acc4(Matrix *X, Matrix *P, Matrix *D) {
+  int n = X->nrows;
+
+  euclidean_dist_baseline(X, D);
+
+  double target_log_perplexity = log(kPerplexityTarget);
+
+  // initialise precisions to 1
+  double precisions[n];
+  for (int i = 0; i < n; i++) {
+    precisions[i] = 1;
+  }
+
+  // loop over all datapoints to determine precision and corresponding
+  // probabilities
+  for (int i = 0; i < n; i++) {
+    double precision_min = 0.0;
+    double precision_max = HUGE_VAL;
+    double *distances = &D->data[i * n];
+    double *probabilities = &P->data[i * n];
+
+    // bisection method for a fixed number of iterations
+    double actual_log_perplexity, normalizer, diff;
+    for (int iter = 0; iter < kJointProbsMaxIter; iter++) {
+      log_perplexity_avx_fma_acc4(distances, probabilities, n, i, precisions[i],
+                                  &actual_log_perplexity, &normalizer);
+      diff = actual_log_perplexity - target_log_perplexity;
+
+      if (diff > 0) {
+        // precision should be increased
+        precision_min = precisions[i];
+        if (precision_max == HUGE_VAL) {
+          precisions[i] *= 2;
+        } else {
+          precisions[i] = 0.5 * (precisions[i] + precision_max);
+        }
+      } else {
+        // precision should be decreased
+        precision_max = precisions[i];
+        if (precision_min == 0.0) {
+          precisions[i] /= 2;
+        } else {
+          precisions[i] = 0.5 * (precisions[i] + precision_min);
+        }
+      }
+    }
+
+    // normalize probabilities
+    for (int i = 0; i < n; i++) {
+      probabilities[i] = probabilities[i] / normalizer;
+    }
+  }
+
+  // convert conditional probabilties to joint probabilities
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double a = P->data[i * n + j];
+      double b = P->data[j * n + i];
+      double prob = (a + b) / (2 * n);
+
+      // early exaggeration
+      prob *= 4;
+
+      // ensure minimal probability
+      if (prob < 1e-12) prob = 1e-12;
+
+      P->data[i * n + j] = prob;
+      P->data[j * n + i] = prob;
+    }
+  }
+}

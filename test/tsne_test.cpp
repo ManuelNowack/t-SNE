@@ -7,7 +7,9 @@
 
 // Put the functions you want to test here.
 INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
-                         testing::Values(&joint_probs_baseline));
+                         testing::Values(&joint_probs_baseline,
+                                         &joint_probs_unroll8,
+                                         &joint_probs_avx_fma_acc4));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline));
@@ -16,7 +18,8 @@ INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
     testing::Values(&log_perplexity_baseline, &log_perplexity_unroll2,
                     &log_perplexity_unroll4, &log_perplexity_unroll8,
-                    &log_perplexity_avx, &log_perplexity_avx_acc4));
+                    &log_perplexity_avx, &log_perplexity_avx_acc4,
+                    &log_perplexity_avx_fma_acc4));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));
 
@@ -61,18 +64,20 @@ testing::AssertionResult IsUpperTriangleNear(double *expected, double *actual,
                                              double precision = PRECISION_ERR) {
   double diff = 0;
   for (int i = 0; i < nrows; i++) {
-    for (int j = i+1; j < ncols; j++) {
-      if (expected[ncols*i + j] == HUGE_VAL || actual[ncols*i + j] == HUGE_VAL) {
-        if (actual[ncols*i + j] != HUGE_VAL || expected[ncols*i + j] != HUGE_VAL) {
+    for (int j = i + 1; j < ncols; j++) {
+      if (expected[ncols * i + j] == HUGE_VAL ||
+          actual[ncols * i + j] == HUGE_VAL) {
+        if (actual[ncols * i + j] != HUGE_VAL ||
+            expected[ncols * i + j] != HUGE_VAL) {
           // case where we don't have two HUGE_VALS
           return testing::AssertionFailure()
-                << "Encountered HUGE_VAL and normal value mismatch, data not "
+                 << "Encountered HUGE_VAL and normal value mismatch, data not "
                     "equal for"
-                << name << ": expected: " << expected[ncols*i + j]
-                << " actual:" << actual[ncols*i + j];
+                 << name << ": expected: " << expected[ncols * i + j]
+                 << " actual:" << actual[ncols * i + j];
         }
       } else {
-        diff += abs(expected[ncols*i + j] - actual[ncols*i + j]);
+        diff += abs(expected[ncols * i + j] - actual[ncols * i + j]);
       }
     }
   }

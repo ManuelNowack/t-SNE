@@ -18,13 +18,15 @@ typedef void log_perplexity_func_t(double *distances, double *probabilities,
 // Put all log_perp_actual fuction declarations here.
 log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
     log_perplexity_unroll4, log_perplexity_unroll8, log_perplexity_avx,
-    log_perplexity_avx_acc4;
+    log_perplexity_avx_acc4, log_perplexity_avx_acc8,
+    log_perplexity_avx_fma_acc4;
 
 // Put all tsne function declarations here.
 tsne_func_t tsne_baseline;
 
 // Put all joint_probs function declarations here.
-joint_probs_func_t joint_probs_baseline;
+joint_probs_func_t joint_probs_baseline, joint_probs_unroll8,
+    joint_probs_avx_fma_acc4;
 
 // Put all grad_desc function declarations here.
 grad_desc_func_t grad_desc_baseline;

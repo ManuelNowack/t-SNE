@@ -16,8 +16,10 @@ void register_functions() {
   tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
 
   // Put all (at least one!) joint_probs functions to test here.
-  joint_probs_func_registry.add_function(&joint_probs_baseline,
-                                         "joint_probs_baseline");
+  joint_probs_func_registry
+      .add_function(&joint_probs_baseline, "joint_probs_baseline")
+      .add_function(&joint_probs_unroll8, "joint_probs_unroll8")
+      .add_function(&joint_probs_avx_fma_acc4, "joint_probs_avx_fma_acc4");
 
   // Put all grad_desc functions to test here.
   grad_desc_func_registry.add_function(&grad_desc_baseline,
@@ -30,8 +32,9 @@ void register_functions() {
       .add_function(&log_perplexity_unroll4, "log_perplexity_unroll4")
       .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
       .add_function(&log_perplexity_avx, "log_perplexity_avx")
-      .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4");
-      
+      .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4")
+      .add_function(&log_perplexity_avx_fma_acc4, "log_perplexity_avx_fma_acc4");
+
   // Put all euclidean_dist functions to test here.
   euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
                                             "euclidean_dist_baseline");

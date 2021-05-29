@@ -92,9 +92,11 @@ void store_matrix(const char *filepath, Matrix A) {
 }
 
 Matrix create_matrix(int nrows, int ncols) {
-  Matrix A = {.nrows = nrows,
-              .ncols = ncols,
-              .data = (double *)aligned_alloc(32, nrows * ncols * sizeof(double))};
+  Matrix A = {
+      .nrows = nrows,
+      .ncols = ncols,
+      .data = (double *)aligned_alloc(32, nrows * ncols * sizeof(double))};
+  memset(A.data, 0, nrows * ncols * sizeof(double));
   if (!A.data) {
     throw std::runtime_error("Could not allocate memory for matrix.");
   }
