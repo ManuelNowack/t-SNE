@@ -1,6 +1,7 @@
 add_library(tsne_library
     matrix.cpp
     baseline.cpp
+    affinities.cpp
     euclidean_dist.cpp
     euclidean_dist_low.cpp
 )

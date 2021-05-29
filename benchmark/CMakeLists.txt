@@ -11,6 +11,9 @@ target_link_libraries(benchmark
     PRIVATE benchmark_library
 )
 
+add_executable(affinities_benchmark affinities_benchmark.cpp)
+target_link_libraries(affinities_benchmark PRIVATE tsne_library)
+
 add_executable(benchmark_euclidean_dist main_euclidean_dist.cpp)
 target_link_libraries(benchmark_euclidean_dist
     PRIVATE benchmark_library
