@@ -6,16 +6,19 @@
 #include <tsne/matrix.h>
 
 // Put the functions you want to test here.
-joint_probs_func_t joint_probs_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
                          testing::Values(&joint_probs_baseline));
 
-grad_desc_func_t grad_desc_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline));
 
-tsne_func_t tsne_baseline;
 INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));
+
+euclidean_dist_func_t euclidean_dist_baseline;
+INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistTest,
+                         testing::Values(&euclidean_dist_baseline));
+INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistLowTest,
+                         testing::Values(&euclidean_dist_baseline));
 
 // compares the n double values of the baseline and the modified function.
 // Precision is the tolerated error due to reordering of operations or similar.
@@ -35,6 +38,37 @@ testing::AssertionResult IsArrayNear(double *expected, double *actual, int n,
       }
     } else {
       diff += abs(expected[i] - actual[i]);
+    }
+  }
+  if (diff > precision) {
+    return testing::AssertionFailure()
+           << "Absolute diff of " << name << ": " << diff << "is larger than "
+           << precision;
+  }
+  return testing::AssertionSuccess();
+}
+
+// Compares upper triangular values of the baseline and the modified function.
+// Precision is the tolerated error due to reordering of operations or similar.
+testing::AssertionResult IsUpperTriangleNear(double *expected, double *actual,
+                                             int nrows, int ncols,
+                                             const char *name,
+                                             double precision = PRECISION_ERR) {
+  double diff = 0;
+  for (int i = 0; i < nrows; i++) {
+    for (int j = i+1; j < ncols; j++) {
+      if (expected[ncols*i + j] == HUGE_VAL || actual[ncols*i + j] == HUGE_VAL) {
+        if (actual[ncols*i + j] != HUGE_VAL || expected[ncols*i + j] != HUGE_VAL) {
+          // case where we don't have two HUGE_VALS
+          return testing::AssertionFailure()
+                << "Encountered HUGE_VAL and normal value mismatch, data not "
+                    "equal for"
+                << name << ": expected: " << expected[ncols*i + j]
+                << " actual:" << actual[ncols*i + j];
+        }
+      } else {
+        diff += abs(expected[ncols*i + j] - actual[ncols*i + j]);
+      }
     }
   }
   if (diff > precision) {
@@ -99,25 +133,27 @@ TEST_P(TsneTest, IsValid) {
   compare_tsne_var(var_expected, var_actual);
 }
 
-/*
-// Tests to be refactored.
-void test_calc_squared_euclid_dist(void (*new_f)(Matrix *, Matrix *), Matrix *X,
-                                   Matrix *D) {
-  printf("Testing calc_squared_euclid_distance:\n");
-  Matrix D_new, X_new;
-  copy_matrix(D, &D_new);
-  copy_matrix(X, &X_new);
+TEST_P(EuclideanDistTest, IsValid) {
+  euclidean_dist_baseline(&X, &var_expected.D);
+  GetParam()(&X, &var_actual.D);
 
-  euclidean_dist_baseline(X, D);
-  new_f(&X_new, &D_new);
-
-  IsArrayNear(X.data, X_new.data, X.ncols * X.nrows, "X");
-  IsArrayNear(D.data, D_new.data, D.ncols * D.nrows, "D");
-
-  free((void *)D_new.data);
-  free((void *)X_new.data);
+  EXPECT_TRUE(IsArrayNear(X.data, X.data, X.ncols * X.nrows, "X"));
+  compare_tsne_var(var_expected, var_actual);
 }
 
+TEST_P(EuclideanDistLowTest, IsValid) {
+  euclidean_dist_baseline(&Y_expected, &var_expected.D);
+  GetParam()(&Y_actual, &var_actual.D);
+
+  EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
+                          Y_expected.ncols * Y_expected.nrows, "Y"));
+  EXPECT_TRUE(IsUpperTriangleNear(var_expected.D.data, var_actual.D.data,
+                                  var_expected.D.nrows, var_expected.D.ncols,
+                                  "D"));
+}
+
+/*
+// Tests to be refactored.
 void test_calc_log_perplexity(void (*new_f)(double *, double *, int, int,
                                             double, double *, double *),
                               double *distances, double *probabilities, int n,

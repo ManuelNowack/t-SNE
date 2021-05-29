@@ -126,8 +126,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, Matrix &X) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
-double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
-                           Matrix &X, Matrix &Y) {
+double perf_test_grad_desc(grad_desc_func_t *f, Matrix &X, Matrix &Y) {
   double cycles = 0.;
   size_t num_runs = 1;
   double multiplier = 1;
@@ -139,7 +138,7 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
   create_tsne_variables(var, n, n_dim);
 
   // Populate the joint probability matrix.
-  joint_probs(&X, &var.P, &var.D);
+  joint_probs_baseline(&X, &var.P, &var.D);
 
   do {
     num_runs = num_runs * multiplier;
@@ -159,6 +158,51 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
       f(&Y, &var, n, n_dim, kFinalMomentum);
+    }
+    end = stop_tsc(start);
+
+    cycles = ((double)end) / num_runs;
+    total_cycles += cycles;
+  }
+  total_cycles /= REP;
+
+  cycles = total_cycles;
+  destroy_tsne_variables(var);
+
+  return cycles;
+}
+
+// Computes and reports the number of cycles required per iteration
+// for the given squared Euclidean distance function.
+double perf_test_euclidean_dist(euclidean_dist_func_t *f, Matrix &X) {
+  double cycles = 0.;
+  size_t num_runs = 1;
+  double multiplier = 1;
+  uint64_t start, end;
+
+  int n = X.nrows;
+  const int n_dim = 2;
+  tsne_var_t var;
+  create_tsne_variables(var, n, n_dim);
+
+  do {
+    num_runs = num_runs * multiplier;
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; i++) {
+      f(&X, &var.D);
+    }
+    end = stop_tsc(start);
+
+    cycles = (double)end;
+    multiplier = (CYCLES_REQUIRED) / (cycles);
+
+  } while (multiplier > 2);
+
+  double total_cycles = 0;
+  for (size_t j = 0; j < REP; j++) {
+    start = start_tsc();
+    for (size_t i = 0; i < num_runs; ++i) {
+      f(&X, &var.D);
     }
     end = stop_tsc(start);
 
