@@ -1,4 +1,5 @@
-#include <tsne/benchmark.h>
+#include "benchmark.h"
+
 #include <tsne/func_registry.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
@@ -125,8 +126,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, Matrix &X) {
 
 // Computes and reports the number of cycles required per iteration
 // for the given joint probabilities function.
-double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
-                           Matrix &X, Matrix &Y) {
+double perf_test_grad_desc(grad_desc_func_t *f, Matrix &X, Matrix &Y) {
   double cycles = 0.;
   size_t num_runs = 1;
   double multiplier = 1;
@@ -138,7 +138,7 @@ double perf_test_grad_desc(grad_desc_func_t *f, joint_probs_func_t *joint_probs,
   create_tsne_variables(var, n, n_dim);
 
   // Populate the joint probability matrix.
-  joint_probs(&X, &var.P, &var.D);
+  joint_probs_baseline(&X, &var.P, &var.D);
 
   do {
     num_runs = num_runs * multiplier;

@@ -27,7 +27,6 @@
  *  along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <tsne/benchmark.h>
 #include <tsne/func_registry.h>
 #include <tsne/matrix.h>
 
@@ -36,7 +35,7 @@
 #include <string>
 #include <vector>
 
-#include "tsc_x86.h"
+#include "benchmark.h"
 
 using namespace std;
 
@@ -49,8 +48,7 @@ int main(int argc, char **argv) {
   }
 
   Matrix X = load_matrix(argv[1]);
-  Matrix Y = load_matrix(argv[2]);
-
+  
   // Determine number of samples used for benchmarking
   int n_measurements;
   int log2_min_samples, log2_max_samples;
@@ -99,7 +97,6 @@ int main(int argc, char **argv) {
 
     int n_samples = n_samples_values[i_measurement];
     Matrix X_sub = {.nrows = n_samples, .ncols = X.ncols, .data = X.data};
-    Matrix Y_sub = {.nrows = n_samples, .ncols = Y.ncols, .data = Y.data};
 
     int i_series = 0;
 
