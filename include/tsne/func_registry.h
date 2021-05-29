@@ -18,8 +18,7 @@ typedef void log_perplexity_func_t(double *distances, double *probabilities,
 // Put all log_perp_actual fuction declarations here.
 log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
     log_perplexity_unroll4, log_perplexity_unroll8, log_perplexity_avx,
-    log_perplexity_avx_acc4, log_perplexity_avx_acc8,
-    log_perplexity_avx_fma_acc4;
+    log_perplexity_avx_acc4, log_perplexity_avx_fma_acc4;
 
 // Put all tsne function declarations here.
 tsne_func_t tsne_baseline;

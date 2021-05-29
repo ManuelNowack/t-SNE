@@ -13,42 +13,37 @@ void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
 
   double target_log_perplexity = log(kPerplexityTarget);
 
-  // initialise precisions to 1
-  double precisions[n];
-  for (int i = 0; i < n; i++) {
-    precisions[i] = 1;
-  }
-
   // loop over all datapoints to determine precision and corresponding
   // probabilities
   for (int i = 0; i < n; i++) {
     double precision_min = 0.0;
     double precision_max = HUGE_VAL;
+    double precision = 1;
     double *distances = &D->data[i * n];
     double *probabilities = &P->data[i * n];
 
     // bisection method for a fixed number of iterations
     double actual_log_perplexity, normalizer, diff;
     for (int iter = 0; iter < kJointProbsMaxIter; iter++) {
-      log_perplexity_unroll8(distances, probabilities, n, i, precisions[i],
+      log_perplexity_unroll8(distances, probabilities, n, i, precision,
                              &actual_log_perplexity, &normalizer);
       diff = actual_log_perplexity - target_log_perplexity;
 
       if (diff > 0) {
         // precision should be increased
-        precision_min = precisions[i];
+        precision_min = precision;
         if (precision_max == HUGE_VAL) {
-          precisions[i] *= 2;
+          precision *= 2;
         } else {
-          precisions[i] = 0.5 * (precisions[i] + precision_max);
+          precision = 0.5 * (precision + precision_max);
         }
       } else {
         // precision should be decreased
-        precision_max = precisions[i];
+        precision_max = precision;
         if (precision_min == 0.0) {
-          precisions[i] /= 2;
+          precision /= 2;
         } else {
-          precisions[i] = 0.5 * (precisions[i] + precision_min);
+          precision = 0.5 * (precision + precision_min);
         }
       }
     }
@@ -85,42 +80,37 @@ void joint_probs_avx_fma_acc4(Matrix *X, Matrix *P, Matrix *D) {
 
   double target_log_perplexity = log(kPerplexityTarget);
 
-  // initialise precisions to 1
-  double precisions[n];
-  for (int i = 0; i < n; i++) {
-    precisions[i] = 1;
-  }
-
   // loop over all datapoints to determine precision and corresponding
   // probabilities
   for (int i = 0; i < n; i++) {
     double precision_min = 0.0;
     double precision_max = HUGE_VAL;
+    double precision = 1;
     double *distances = &D->data[i * n];
     double *probabilities = &P->data[i * n];
 
     // bisection method for a fixed number of iterations
     double actual_log_perplexity, normalizer, diff;
     for (int iter = 0; iter < kJointProbsMaxIter; iter++) {
-      log_perplexity_avx_fma_acc4(distances, probabilities, n, i, precisions[i],
+      log_perplexity_avx_fma_acc4(distances, probabilities, n, i, precision,
                                   &actual_log_perplexity, &normalizer);
       diff = actual_log_perplexity - target_log_perplexity;
 
       if (diff > 0) {
         // precision should be increased
-        precision_min = precisions[i];
+        precision_min = precision;
         if (precision_max == HUGE_VAL) {
-          precisions[i] *= 2;
+          precision *= 2;
         } else {
-          precisions[i] = 0.5 * (precisions[i] + precision_max);
+          precision = 0.5 * (precision + precision_max);
         }
       } else {
         // precision should be decreased
-        precision_max = precisions[i];
+        precision_max = precision;
         if (precision_min == 0.0) {
-          precisions[i] /= 2;
+          precision /= 2;
         } else {
-          precisions[i] = 0.5 * (precisions[i] + precision_min);
+          precision = 0.5 * (precision + precision_min);
         }
       }
     }
