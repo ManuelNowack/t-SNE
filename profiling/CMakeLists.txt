@@ -1,0 +1,3 @@
+add_executable(profiling_joint_probs joint_probs/main.cpp)
+target_link_libraries(profiling_joint_probs PRIVATE tsne_library)
+
