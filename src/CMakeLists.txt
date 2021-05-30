@@ -7,6 +7,7 @@ add_library(tsne_library
     euclidean_dist.cpp
     euclidean_dist_low.cpp
     grad_desc.cpp
+    tsne.cpp
 )
 
 # We need this directory, and users of our library will need it too

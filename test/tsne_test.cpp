@@ -21,12 +21,19 @@ INSTANTIATE_TEST_SUITE_P(
                     &log_perplexity_avx, &log_perplexity_avx_acc4,
                     &log_perplexity_avx_fma_acc4));
 
-INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));
+INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest,
+                         testing::Values(&tsne_baseline,
+                                         &tsne_scalar,
+                                         &tsne_vec));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistTest,
-                         testing::Values(&euclidean_dist_baseline));
+                         testing::Values(&euclidean_dist_baseline,
+                                         &euclidean_dist_alt_unroll4,
+                                         &euclidean_dist_alt_vec_unroll4x4));
 INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistLowTest,
-                         testing::Values(&euclidean_dist_baseline));
+                         testing::Values(&euclidean_dist_baseline,
+                                         &euclidean_dist_low_unroll,
+                                         &euclidean_dist_low_vec3_unroll4x8));
 
 // compares the n double values of the baseline and the modified function.
 // Precision is the tolerated error due to reordering of operations or similar.
