@@ -9,7 +9,7 @@
 void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
   int n = X->nrows;
 
-  euclidean_dist_baseline(X, D);
+  euclidean_dist_alt_unroll4(X, D);
 
   double target_log_perplexity = log(kPerplexityTarget);
 
@@ -76,7 +76,7 @@ void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
 void joint_probs_avx_fma_acc4(Matrix *X, Matrix *P, Matrix *D) {
   int n = X->nrows;
 
-  euclidean_dist_baseline(X, D);
+  euclidean_dist_alt_vec_unroll4x4(X, D);
 
   double target_log_perplexity = log(kPerplexityTarget);
 
