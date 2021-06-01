@@ -738,7 +738,6 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
   int m = Y->ncols;
 
   double *Y_data = Y->data;
-  double *D_data = D->data;
   double *Q_data = Q->data;
   double *Q_numerators_data = Q_numerators->data;
 
@@ -776,7 +775,6 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
 
     __m256d prod00 = _mm256_mul_pd(diff000, diff000);
     __m256d dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
-    _mm256_storeu_pd(D_data + n*i + j, dists00);
     __m256d qnum00 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists00));
     qnum00 = _mm256_blend_pd(qnum00, zero_vec, 0b0001);
     sum = _mm256_fmadd_pd(qnum00, onehalf_vec, sum);
@@ -788,7 +786,6 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
 
     __m256d prod10 = _mm256_mul_pd(diff100, diff100);
     __m256d dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
-    _mm256_storeu_pd(D_data + n*i + n + j, dists10);
     __m256d qnum10 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists10));
     qnum10 = _mm256_blend_pd(qnum10, zero_vec, 0b0010);
     sum = _mm256_fmadd_pd(qnum10, onehalf_vec, sum);
@@ -800,7 +797,6 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
 
     __m256d prod20 = _mm256_mul_pd(diff200, diff200);
     __m256d dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
-    _mm256_storeu_pd(D_data + n*i + 2*n + j, dists20);
     __m256d qnum20 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists20));
     qnum20 = _mm256_blend_pd(qnum20, zero_vec, 0b0100);
     sum = _mm256_fmadd_pd(qnum20, onehalf_vec, sum);
@@ -812,7 +808,6 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
 
     __m256d prod30 = _mm256_mul_pd(diff300, diff300);
     __m256d dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
-    _mm256_storeu_pd(D_data + n*i + 3*n + j, dists30);
     __m256d qnum30 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists30));
     qnum30 = _mm256_blend_pd(qnum30, zero_vec, 0b1000);
     sum = _mm256_fmadd_pd(qnum30, onehalf_vec, sum);
