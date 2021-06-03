@@ -17,6 +17,7 @@ _deps
 CMakeUserPresets.json
 build/
 build-debug/
+build-icc/
 
 ### CMake Patch ###
 # External projects

@@ -3,7 +3,7 @@
 #include <tsne/debug.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
-#include <vectorclass/vectormath_exp.h>
+/* #include <vectorclass/vectormath_exp.h> */
 
 void log_perplexity_unroll2(double *distances, double *probabilities, int n,
                             int k, double precision, double *log_perplexity,
@@ -150,7 +150,7 @@ void log_perplexity_avx(double *distances, double *probabilities, int n, int k,
   __m256i ii, m0;                              // masks
 
   __m256d z0 = _mm256_setzero_pd(), h0 = _mm256_setzero_pd();
-  Vec4d e0;
+  __m256d e0;
   __m256d d0, p0;
   double Z, H;
 
@@ -161,7 +161,7 @@ void log_perplexity_avx(double *distances, double *probabilities, int n, int k,
 
     ii = _mm256_set1_epi64x(i);
     m0 = _mm256_cmpeq_epi64(_mm256_add_epi64(ii, o0), diag_index);
-    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), exp(e0));
+    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), _mm256_exp_pd(e0));
 
     d0 = _mm256_mul_pd(d0, p0);
     z0 = _mm256_add_pd(z0, p0);
@@ -207,7 +207,7 @@ void log_perplexity_avx_acc4(double *distances, double *probabilities, int n,
   __m256i o3 = _mm256_set_epi64x(15, 14, 13, 12);
   __m256i ii, m0, m1, m2, m3;  // masks.
 
-  Vec4d e0, e1, e2, e3;
+  __m256d e0, e1, e2, e3;
   __m256d d0, d1, d2, d3, p0, p1, p2, p3;
   double Z, H;
 
@@ -229,10 +229,10 @@ void log_perplexity_avx_acc4(double *distances, double *probabilities, int n,
     m2 = _mm256_cmpeq_epi64(_mm256_add_epi64(ii, o2), diag_index);
     m3 = _mm256_cmpeq_epi64(_mm256_add_epi64(ii, o3), diag_index);
 
-    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), exp(e0));
-    p1 = _mm256_andnot_pd(_mm256_castsi256_pd(m1), exp(e1));
-    p2 = _mm256_andnot_pd(_mm256_castsi256_pd(m2), exp(e2));
-    p3 = _mm256_andnot_pd(_mm256_castsi256_pd(m3), exp(e3));
+    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), _mm256_exp_pd(e0));
+    p1 = _mm256_andnot_pd(_mm256_castsi256_pd(m1), _mm256_exp_pd(e1));
+    p2 = _mm256_andnot_pd(_mm256_castsi256_pd(m2), _mm256_exp_pd(e2));
+    p3 = _mm256_andnot_pd(_mm256_castsi256_pd(m3), _mm256_exp_pd(e3));
 
     d0 = _mm256_mul_pd(d0, p0);
     d1 = _mm256_mul_pd(d1, p1);
@@ -293,7 +293,7 @@ void log_perplexity_avx_fma_acc4(double *distances, double *probabilities,
   __m256i o3 = _mm256_set_epi64x(15, 14, 13, 12);
   __m256i ii, m0, m1, m2, m3;  // masks.
 
-  Vec4d e0, e1, e2, e3;
+  __m256d e0, e1, e2, e3;
   __m256d d0, d1, d2, d3, p0, p1, p2, p3;
   double Z, H;
 
@@ -315,10 +315,10 @@ void log_perplexity_avx_fma_acc4(double *distances, double *probabilities,
     m2 = _mm256_cmpeq_epi64(_mm256_add_epi64(ii, o2), diag_index);
     m3 = _mm256_cmpeq_epi64(_mm256_add_epi64(ii, o3), diag_index);
 
-    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), exp(e0));
-    p1 = _mm256_andnot_pd(_mm256_castsi256_pd(m1), exp(e1));
-    p2 = _mm256_andnot_pd(_mm256_castsi256_pd(m2), exp(e2));
-    p3 = _mm256_andnot_pd(_mm256_castsi256_pd(m3), exp(e3));
+    p0 = _mm256_andnot_pd(_mm256_castsi256_pd(m0), _mm256_exp_pd(e0));
+    p1 = _mm256_andnot_pd(_mm256_castsi256_pd(m1), _mm256_exp_pd(e1));
+    p2 = _mm256_andnot_pd(_mm256_castsi256_pd(m2), _mm256_exp_pd(e2));
+    p3 = _mm256_andnot_pd(_mm256_castsi256_pd(m3), _mm256_exp_pd(e3));
 
     z0 = _mm256_add_pd(z0, p0);
     z1 = _mm256_add_pd(z1, p1);
