@@ -6,14 +6,14 @@
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
-void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int n_dim,
+void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
                              double momentum) {
   // START: Euclidean Distances
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
       double sum = 0.0;
-      for (int k = 0; k < n_dim; k++) {
-        const double dist = Y->data[i * n_dim + k] - Y->data[j * n_dim + k];
+      for (int k = 0; k < m; k++) {
+        const double dist = Y->data[i * m + k] - Y->data[j * m + k];
         sum += dist * dist;
       }
       var->D.data[i * n + j] = sum;
@@ -68,23 +68,23 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int n_dim,
     var->tmp.data[i * n + i] = 0.0;
   }
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < n_dim; k++) {
+    for (int k = 0; k < m; k++) {
       double value = 0;
       for (int j = 0; j < n; j++) {
         value += var->tmp.data[i * n + j] *
-                 (Y->data[i * n_dim + k] - Y->data[j * n_dim + k]);
+                 (Y->data[i * m + k] - Y->data[j * m + k]);
       }
       value *= 4;
-      var->grad_Y.data[i * n_dim + k] = value;
+      var->grad_Y.data[i * m + k] = value;
     }
   }
 
   // calculate gains, according to adaptive heuristic of Python implementation
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n_dim; j++) {
-      bool positive_grad = (var->grad_Y.data[i * n_dim + j] > 0);
-      bool positive_delta = (var->Y_delta.data[i * n_dim + j] > 0);
-      double value = var->gains.data[i * n_dim + j];
+    for (int j = 0; j < m; j++) {
+      bool positive_grad = (var->grad_Y.data[i * m + j] > 0);
+      bool positive_delta = (var->Y_delta.data[i * m + j] > 0);
+      double value = var->gains.data[i * m + j];
       if ((positive_grad && positive_delta) ||
           (!positive_grad && !positive_delta)) {
         value *= 0.8;
@@ -92,55 +92,55 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int n_dim,
         value += 0.2;
       }
       if (value < kMinGain) value = kMinGain;
-      var->gains.data[i * n_dim + j] = value;
+      var->gains.data[i * m + j] = value;
     }
   }
 
   // update step
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n_dim; j++) {
-      double value = momentum * var->Y_delta.data[i * n_dim + j] -
-                     kEta * var->gains.data[i * n_dim + j] *
-                         var->grad_Y.data[i * n_dim + j];
-      var->Y_delta.data[i * n_dim + j] = value;
-      Y->data[i * n_dim + j] += value;
+    for (int j = 0; j < m; j++) {
+      double value = momentum * var->Y_delta.data[i * m + j] -
+                     kEta * var->gains.data[i * m + j] *
+                         var->grad_Y.data[i * m + j];
+      var->Y_delta.data[i * m + j] = value;
+      Y->data[i * m + j] += value;
     }
   }
 
   // center each dimension at 0
-  double means[n_dim];
-  for (int j = 0; j < n_dim; j++) {
+  double means[m];
+  for (int j = 0; j < m; j++) {
     means[j] = 0;
   }
   // accumulate
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n_dim; j++) {
-      means[j] += Y->data[i * n_dim + j];
+    for (int j = 0; j < m; j++) {
+      means[j] += Y->data[i * m + j];
     }
   }
   // take mean
-  for (int j = 0; j < n_dim; j++) {
+  for (int j = 0; j < m; j++) {
     means[j] /= n;
   }
   // center
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n_dim; j++) {
-      Y->data[i * n_dim + j] -= means[j];
+    for (int j = 0; j < m; j++) {
+      Y->data[i * m + j] -= means[j];
     }
   }
 }
 
 void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var,
-                                 int n_dim) {
+                                 int m) {
   int n = X->nrows;
 
   joint_probs_baseline(X, &var->P, &var->D);
 
   // determine embeddings
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n_dim; j++) {
-      var->Y_delta.data[i * n_dim + j] = 0.0;
-      var->gains.data[i * n_dim + j] = 1.0;
+    for (int j = 0; j < m; j++) {
+      var->Y_delta.data[i * m + j] = 0.0;
+      var->gains.data[i * m + j] = 1.0;
     }
   }
 
@@ -162,6 +162,6 @@ void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var,
       momentum = kFinalMomentum;
     }
 
-    grad_desc_less_matrices(Y, var, n, n_dim, momentum);
+    grad_desc_less_matrices(Y, var, n, m, momentum);
   }
 }
