@@ -28,12 +28,11 @@ void register_functions() {
   // Put all log_perplexity functions to test here.
   log_perplexity_func_registry
       .add_function(&log_perplexity_baseline, "log_perplexity_baseline")
-      .add_function(&log_perplexity_unroll2, "log_perplexity_unroll2")
-      .add_function(&log_perplexity_unroll4, "log_perplexity_unroll4")
       .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
       .add_function(&log_perplexity_avx, "log_perplexity_avx")
       .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4")
-      .add_function(&log_perplexity_avx_fma_acc4, "log_perplexity_avx_fma_acc4");
+      .add_function(&log_perplexity_avx_fma_acc4,
+                    "log_perplexity_avx_fma_acc4");
 
   // Put all euclidean_dist functions to test here.
   euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
