@@ -21,14 +21,14 @@ log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
     log_perplexity_avx_acc4, log_perplexity_avx_fma_acc4;
 
 // Put all tsne function declarations here.
-tsne_func_t tsne_baseline, tsne_less_matrices_baseline;
+tsne_func_t tsne_baseline, tsne_no_vars;
 
 // Put all joint_probs function declarations here.
 joint_probs_func_t joint_probs_baseline, joint_probs_unroll8,
     joint_probs_avx_fma_acc4;
 
 // Put all grad_desc function declarations here.
-grad_desc_func_t grad_desc_baseline;
+grad_desc_func_t grad_desc_baseline, grad_desc_no_vars_baseline;
 
 // Put all euclidean_dist function declarations here.
 euclidean_dist_func_t euclidean_dist_baseline;

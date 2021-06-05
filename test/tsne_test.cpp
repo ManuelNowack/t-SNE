@@ -12,7 +12,8 @@ INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
                                          &joint_probs_avx_fma_acc4));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
-                         testing::Values(&grad_desc_baseline));
+                         testing::Values(&grad_desc_baseline,
+                                         &grad_desc_no_vars_baseline));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
@@ -22,8 +23,7 @@ INSTANTIATE_TEST_SUITE_P(
                     &log_perplexity_avx_fma_acc4));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest,
-                         testing::Values(&tsne_baseline,
-                                         &tsne_less_matrices_baseline));
+                         testing::Values(&tsne_baseline, &tsne_no_vars));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistTest,
                          testing::Values(&euclidean_dist_baseline));

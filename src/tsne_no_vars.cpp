@@ -6,8 +6,8 @@
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
-void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
-                             double momentum) {
+void grad_desc_no_vars_baseline(Matrix *Y, tsne_var_t *var, int n, int m,
+                                double momentum) {
   // START: Euclidean Distances
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
@@ -133,7 +133,7 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   // END: Gradient Descent
 }
 
-void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
+void tsne_no_vars(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
   int n = X->nrows;
 
   joint_probs_baseline(X, &var->P, &var->D);
@@ -164,6 +164,6 @@ void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
       momentum = kFinalMomentum;
     }
 
-    grad_desc_less_matrices(Y, var, n, m, momentum);
+    grad_desc_no_vars_baseline(Y, var, n, m, momentum);
   }
 }
