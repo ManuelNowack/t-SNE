@@ -257,6 +257,121 @@ void grad_desc_no_vars_tmp(Matrix *Y, tsne_var_t *var, int n, int m,
   // END: Gradient Descent
 }
 
+void grad_desc_no_vars_D(Matrix *Y, tsne_var_t *var, int n, int m,
+                         double momentum) {
+  // START: Affinities
+  double sum = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double dist_sum = 0.0;
+      for (int k = 0; k < m; k++) {
+        const double dist = Y->data[i * m + k] - Y->data[j * m + k];
+        dist_sum += dist * dist;
+      }
+      const double value = 1.0 / (1.0 + dist_sum);
+      var->Q_numerators.data[i * n + j] = value;
+      var->Q_numerators.data[j * n + i] = value;
+      sum += value;
+      // DELETE: Only required for full test
+      var->D.data[i * n + j] = dist_sum;
+      var->D.data[j * n + i] = dist_sum;
+    }
+  }
+
+  // set diagonal elements
+  for (int i = 0; i < n; i++) {
+    var->Q.data[i * n + i] = 0.0;
+    // DELETE: Only required for full test
+    var->D.data[i * n + i] = 0.0;
+  }
+
+  const double norm = 0.5 / sum;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double value = var->Q_numerators.data[i * n + j];
+      value *= norm;
+      if (value < kMinimumProbability) {
+        value = kMinimumProbability;
+      }
+      var->Q.data[i * n + j] = value;
+      var->Q.data[j * n + i] = value;
+    }
+  }
+  // END: Affinities
+
+  // START: Gradient Descent
+  for (int i = 0; i < n; i++) {
+    for (int k = 0; k < m; k++) {
+      double sum = 0.0;
+      for (int j = 0; j < n; j++) {
+        const double tmp_value =
+            (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
+            var->Q_numerators.data[i * n + j];
+        const double value =
+            tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
+        sum += value;
+        // DELETE: Only required for full test
+        var->tmp.data[i * n + j] = tmp_value;
+      }
+      const double value = 4.0 * sum;
+      var->grad_Y.data[i * m + k] = value;
+    }
+  }
+
+  // calculate gains, according to adaptive heuristic of Python implementation
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const bool positive_grad = (var->grad_Y.data[i * m + j] > 0);
+      const bool positive_delta = (var->Y_delta.data[i * m + j] > 0);
+      double value = var->gains.data[i * m + j];
+      if ((positive_grad && positive_delta) ||
+          (!positive_grad && !positive_delta)) {
+        value *= 0.8;
+      } else {
+        value += 0.2;
+      }
+      if (value < kMinGain) {
+        value = kMinGain;
+      }
+      var->gains.data[i * m + j] = value;
+    }
+  }
+
+  // update step
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const double value =
+          momentum * var->Y_delta.data[i * m + j] -
+          kEta * var->gains.data[i * m + j] * var->grad_Y.data[i * m + j];
+      var->Y_delta.data[i * m + j] = value;
+      Y->data[i * m + j] += value;
+    }
+  }
+
+  // center each dimension at 0
+  double means[m];
+  for (int j = 0; j < m; j++) {
+    means[j] = 0.0;
+  }
+  // accumulate
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      means[j] += Y->data[i * m + j];
+    }
+  }
+  // take mean
+  for (int j = 0; j < m; j++) {
+    means[j] /= n;
+  }
+  // center
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      Y->data[i * m + j] -= means[j];
+    }
+  }
+  // END: Gradient Descent
+}
+
 void tsne_no_vars(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
   int n = X->nrows;
 

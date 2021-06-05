@@ -14,7 +14,8 @@ INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline,
                                          &grad_desc_no_vars_baseline,
-                                         &grad_desc_no_vars_tmp));
+                                         &grad_desc_no_vars_tmp,
+                                         &grad_desc_no_vars_D));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
