@@ -91,28 +91,28 @@ testing::AssertionResult IsUpperTriangleNear(double *expected, double *actual,
   return testing::AssertionSuccess();
 }
 
-void compare_tsne_var(tsne_var_t &expected, tsne_var_t &actual) {
+void compare_tsne_var(tsne_var_t &expected, tsne_var_t &actual, double precision = PRECISION_ERR) {
   EXPECT_TRUE(IsArrayNear(expected.D.data, actual.D.data,
-                          expected.D.ncols * expected.D.nrows, "D"));
+                          expected.D.ncols * expected.D.nrows, "D", precision));
   EXPECT_TRUE(IsArrayNear(expected.gains.data, actual.gains.data,
                           expected.gains.ncols * expected.gains.nrows,
-                          "gains"));
+                          "gains", precision));
   EXPECT_TRUE(IsArrayNear(expected.grad_Y.data, actual.grad_Y.data,
                           expected.grad_Y.ncols * expected.grad_Y.nrows,
-                          "grad_Y"));
+                          "grad_Y", precision));
   EXPECT_TRUE(IsArrayNear(expected.P.data, actual.P.data,
-                          expected.P.ncols * expected.P.nrows, "P"));
+                          expected.P.ncols * expected.P.nrows, "P", precision));
   EXPECT_TRUE(IsArrayNear(expected.Q.data, actual.Q.data,
-                          expected.Q.ncols * expected.Q.nrows, "Q"));
+                          expected.Q.ncols * expected.Q.nrows, "Q", precision));
   EXPECT_TRUE(
       IsArrayNear(expected.Q_numerators.data, actual.Q_numerators.data,
                   expected.Q_numerators.ncols * expected.Q_numerators.nrows,
-                  "Q_numerator"));
+                  "Q_numerator", precision));
   EXPECT_TRUE(IsArrayNear(expected.tmp.data, actual.tmp.data,
-                          expected.tmp.ncols * expected.tmp.nrows, "tmp"));
+                          expected.tmp.ncols * expected.tmp.nrows, "tmp", precision));
   EXPECT_TRUE(IsArrayNear(expected.Y_delta.data, actual.Y_delta.data,
                           expected.Y_delta.ncols * expected.Y_delta.nrows,
-                          "Y_delta"));
+                          "Y_delta", precision));
 }
 
 TEST_P(JointProbsTest, IsValid) {
@@ -131,8 +131,8 @@ TEST_P(GradDescTest, IsValid) {
   GetParam()(&Y_actual, &var_actual, n, n_dim, kFinalMomentum);
 
   EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
-                          Y_expected.ncols * Y_expected.nrows, "Y"));
-  compare_tsne_var(var_expected, var_actual);
+                          Y_expected.ncols * Y_expected.nrows, "Y", 0.0));
+  compare_tsne_var(var_expected, var_actual, 0.0);
 }
 
 TEST_P(LogPerplexityTest, IsValid) {
