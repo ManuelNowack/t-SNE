@@ -28,7 +28,8 @@ joint_probs_func_t joint_probs_baseline, joint_probs_unroll8,
     joint_probs_avx_fma_acc4;
 
 // Put all grad_desc function declarations here.
-grad_desc_func_t grad_desc_baseline, grad_desc_no_vars_baseline;
+grad_desc_func_t grad_desc_baseline, grad_desc_no_vars_baseline,
+    grad_desc_no_vars_tmp;
 
 // Put all euclidean_dist function declarations here.
 euclidean_dist_func_t euclidean_dist_baseline;

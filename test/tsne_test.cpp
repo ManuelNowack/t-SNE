@@ -13,7 +13,8 @@ INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
 
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                          testing::Values(&grad_desc_baseline,
-                                         &grad_desc_no_vars_baseline));
+                                         &grad_desc_no_vars_baseline,
+                                         &grad_desc_no_vars_tmp));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
@@ -91,12 +92,13 @@ testing::AssertionResult IsUpperTriangleNear(double *expected, double *actual,
   return testing::AssertionSuccess();
 }
 
-void compare_tsne_var(tsne_var_t &expected, tsne_var_t &actual, double precision = PRECISION_ERR) {
+void compare_tsne_var(tsne_var_t &expected, tsne_var_t &actual,
+                      double precision = PRECISION_ERR) {
   EXPECT_TRUE(IsArrayNear(expected.D.data, actual.D.data,
                           expected.D.ncols * expected.D.nrows, "D", precision));
   EXPECT_TRUE(IsArrayNear(expected.gains.data, actual.gains.data,
-                          expected.gains.ncols * expected.gains.nrows,
-                          "gains", precision));
+                          expected.gains.ncols * expected.gains.nrows, "gains",
+                          precision));
   EXPECT_TRUE(IsArrayNear(expected.grad_Y.data, actual.grad_Y.data,
                           expected.grad_Y.ncols * expected.grad_Y.nrows,
                           "grad_Y", precision));
@@ -109,7 +111,8 @@ void compare_tsne_var(tsne_var_t &expected, tsne_var_t &actual, double precision
                   expected.Q_numerators.ncols * expected.Q_numerators.nrows,
                   "Q_numerator", precision));
   EXPECT_TRUE(IsArrayNear(expected.tmp.data, actual.tmp.data,
-                          expected.tmp.ncols * expected.tmp.nrows, "tmp", precision));
+                          expected.tmp.ncols * expected.tmp.nrows, "tmp",
+                          precision));
   EXPECT_TRUE(IsArrayNear(expected.Y_delta.data, actual.Y_delta.data,
                           expected.Y_delta.ncols * expected.Y_delta.nrows,
                           "Y_delta", precision));
