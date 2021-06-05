@@ -16,7 +16,8 @@ INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                                          &grad_desc_no_vars_baseline,
                                          &grad_desc_no_vars_tmp,
                                          &grad_desc_no_vars_D,
-                                         &grad_desc_no_vars_Q));
+                                         &grad_desc_no_vars_Q,
+                                         &grad_desc_no_vars_Q_numerators));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
