@@ -8,7 +8,24 @@
 
 void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int n_dim,
                              double momentum) {
-  euclidean_dist_baseline(Y, &var->D);
+  // START: Euclidean Distances
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double sum = 0.0;
+      for (int k = 0; k < n_dim; k++) {
+        const double dist = Y->data[i * n_dim + k] - Y->data[j * n_dim + k];
+        sum += dist * dist;
+      }
+      var->D.data[i * n + j] = sum;
+      var->D.data[j * n + i] = sum;
+    }
+  }
+
+  // set diagonal entries
+  for (int i = 0; i < n; i++) {
+    var->D.data[i * n + i] = 0.0;
+  }
+  // END: Euclidean Distances
 
   // START: Affinities
   double sum = 0;
