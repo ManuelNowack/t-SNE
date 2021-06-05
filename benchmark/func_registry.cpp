@@ -13,7 +13,8 @@ void register_functions() {
       FuncRegistry<euclidean_dist_func_t>::get_instance();
 
   // Put all tsne functions to test here.
-  tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
+  tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline")
+      .add_function(&tsne_no_vars, "tsne_no_vars");
 
   // Put all (at least one!) joint_probs functions to test here.
   joint_probs_func_registry
@@ -22,8 +23,15 @@ void register_functions() {
       .add_function(&joint_probs_avx_fma_acc4, "joint_probs_avx_fma_acc4");
 
   // Put all grad_desc functions to test here.
-  grad_desc_func_registry.add_function(&grad_desc_baseline,
-                                       "grad_desc_baseline");
+  grad_desc_func_registry
+      .add_function(&grad_desc_baseline, "grad_desc_baseline")
+      .add_function(&grad_desc_no_vars_baseline, "grad_desc_no_vars_baseline")
+      .add_function(&grad_desc_no_vars_tmp, "grad_desc_no_vars_tmp")
+      .add_function(&grad_desc_no_vars_D, "grad_desc_no_vars_D")
+      .add_function(&grad_desc_no_vars_Q, "grad_desc_no_vars_Q")
+      .add_function(&grad_desc_no_vars_Q_numerators,
+                    "grad_desc_no_vars_Q_numerators")
+      .add_function(&grad_desc_no_vars_scalar, "grad_desc_no_vars_scalar");
 
   // Put all log_perplexity functions to test here.
   log_perplexity_func_registry
@@ -33,7 +41,8 @@ void register_functions() {
       .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
       .add_function(&log_perplexity_avx, "log_perplexity_avx")
       .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4")
-      .add_function(&log_perplexity_avx_fma_acc4, "log_perplexity_avx_fma_acc4");
+      .add_function(&log_perplexity_avx_fma_acc4,
+                    "log_perplexity_avx_fma_acc4");
 
   // Put all euclidean_dist functions to test here.
   euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
