@@ -57,11 +57,11 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   }
   // END: Affinities
 
-  // calculate gradient with respect to embeddings Y
+  // START: Gradient Descent
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
-      double value = (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
-                     var->Q_numerators.data[i * n + j];
+      const double value = (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
+                           var->Q_numerators.data[i * n + j];
       var->tmp.data[i * n + j] = value;
       var->tmp.data[j * n + i] = value;
     }
@@ -69,12 +69,12 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   }
   for (int i = 0; i < n; i++) {
     for (int k = 0; k < m; k++) {
-      double value = 0;
+      double value = 0.0;
       for (int j = 0; j < n; j++) {
         value += var->tmp.data[i * n + j] *
                  (Y->data[i * m + k] - Y->data[j * m + k]);
       }
-      value *= 4;
+      value *= 4.0;
       var->grad_Y.data[i * m + k] = value;
     }
   }
@@ -82,8 +82,8 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   // calculate gains, according to adaptive heuristic of Python implementation
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m; j++) {
-      bool positive_grad = (var->grad_Y.data[i * m + j] > 0);
-      bool positive_delta = (var->Y_delta.data[i * m + j] > 0);
+      const bool positive_grad = (var->grad_Y.data[i * m + j] > 0);
+      const bool positive_delta = (var->Y_delta.data[i * m + j] > 0);
       double value = var->gains.data[i * m + j];
       if ((positive_grad && positive_delta) ||
           (!positive_grad && !positive_delta)) {
@@ -91,7 +91,9 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
       } else {
         value += 0.2;
       }
-      if (value < kMinGain) value = kMinGain;
+      if (value < kMinGain) {
+        value = kMinGain;
+      }
       var->gains.data[i * m + j] = value;
     }
   }
@@ -99,9 +101,9 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   // update step
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m; j++) {
-      double value = momentum * var->Y_delta.data[i * m + j] -
-                     kEta * var->gains.data[i * m + j] *
-                         var->grad_Y.data[i * m + j];
+      const double value =
+          momentum * var->Y_delta.data[i * m + j] -
+          kEta * var->gains.data[i * m + j] * var->grad_Y.data[i * m + j];
       var->Y_delta.data[i * m + j] = value;
       Y->data[i * m + j] += value;
     }
@@ -110,7 +112,7 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
   // center each dimension at 0
   double means[m];
   for (int j = 0; j < m; j++) {
-    means[j] = 0;
+    means[j] = 0.0;
   }
   // accumulate
   for (int i = 0; i < n; i++) {
@@ -128,10 +130,10 @@ void grad_desc_less_matrices(Matrix *Y, tsne_var_t *var, int n, int m,
       Y->data[i * m + j] -= means[j];
     }
   }
+  // END: Gradient Descent
 }
 
-void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var,
-                                 int m) {
+void tsne_less_matrices_baseline(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
   int n = X->nrows;
 
   joint_probs_baseline(X, &var->P, &var->D);
