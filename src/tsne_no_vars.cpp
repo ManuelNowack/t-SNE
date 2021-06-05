@@ -415,7 +415,7 @@ void grad_desc_no_vars_Q(Matrix *Y, tsne_var_t *var, int n, int m,
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
     for (int k = 0; k < m; k++) {
-      double sum = 0.0;
+      sum = 0.0;
       for (int j = 0; j < n; j++) {
         double q_value = var->Q_numerators.data[i * n + j];
         q_value *= norm;
@@ -531,11 +531,11 @@ void grad_desc_no_vars_Q_numerators(Matrix *Y, tsne_var_t *var, int n, int m,
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
     for (int k = 0; k < m; k++) {
-      double sum = 0.0;
+      sum = 0.0;
       for (int j = 0; j < n; j++) {
         double dist_sum = 0.0;
-        for (int k = 0; k < m; k++) {
-          const double dist = Y->data[i * m + k] - Y->data[j * m + k];
+        for (int l = 0; l < m; l++) {
+          const double dist = Y->data[i * m + l] - Y->data[j * m + l];
           dist_sum += dist * dist;
         }
         const double q_numerator_value = 1.0 / (1.0 + dist_sum);
