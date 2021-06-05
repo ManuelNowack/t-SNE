@@ -6,6 +6,8 @@
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
 
+#define WRITE_ALL_VARS 1
+
 void grad_desc_no_vars_baseline(Matrix *Y, tsne_var_t *var, int n, int m,
                                 double momentum) {
   // START: Euclidean Distances
@@ -195,8 +197,9 @@ void grad_desc_no_vars_tmp(Matrix *Y, tsne_var_t *var, int n, int m,
         const double value =
             tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
         sum += value;
-        // DELETE: Only required for full test
-        var->tmp.data[i * n + j] = tmp_value;
+        if (WRITE_ALL_VARS) {
+          var->tmp.data[i * n + j] = tmp_value;
+        }
       }
       const double value = 4.0 * sum;
       var->grad_Y.data[i * m + k] = value;
@@ -272,17 +275,19 @@ void grad_desc_no_vars_D(Matrix *Y, tsne_var_t *var, int n, int m,
       var->Q_numerators.data[i * n + j] = value;
       var->Q_numerators.data[j * n + i] = value;
       sum += value;
-      // DELETE: Only required for full test
-      var->D.data[i * n + j] = dist_sum;
-      var->D.data[j * n + i] = dist_sum;
+      if (WRITE_ALL_VARS) {
+        var->D.data[i * n + j] = dist_sum;
+        var->D.data[j * n + i] = dist_sum;
+      }
     }
   }
 
   // set diagonal elements
   for (int i = 0; i < n; i++) {
     var->Q.data[i * n + i] = 0.0;
-    // DELETE: Only required for full test
-    var->D.data[i * n + i] = 0.0;
+    if (WRITE_ALL_VARS) {
+      var->D.data[i * n + i] = 0.0;
+    }
   }
 
   const double norm = 0.5 / sum;
@@ -310,8 +315,9 @@ void grad_desc_no_vars_D(Matrix *Y, tsne_var_t *var, int n, int m,
         const double value =
             tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
         sum += value;
-        // DELETE: Only required for full test
-        var->tmp.data[i * n + j] = tmp_value;
+        if (WRITE_ALL_VARS) {
+          var->tmp.data[i * n + j] = tmp_value;
+        }
       }
       const double value = 4.0 * sum;
       var->grad_Y.data[i * m + k] = value;
