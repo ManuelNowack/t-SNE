@@ -21,7 +21,9 @@ INSTANTIATE_TEST_SUITE_P(
                     &log_perplexity_avx, &log_perplexity_avx_acc4,
                     &log_perplexity_avx_fma_acc4));
 
-INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest, testing::Values(&tsne_baseline));
+INSTANTIATE_TEST_SUITE_P(Tsne, TsneTest,
+                         testing::Values(&tsne_baseline,
+                                         &tsne_less_matrices_baseline));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, EuclideanDistTest,
                          testing::Values(&euclidean_dist_baseline));

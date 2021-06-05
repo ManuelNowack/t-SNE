@@ -6,6 +6,7 @@ add_library(tsne_library
     affinities.cpp
     euclidean_dist.cpp
     euclidean_dist_low.cpp
+    tsne_less_matrices.cpp
 )
 
 # We need this directory, and users of our library will need it too
