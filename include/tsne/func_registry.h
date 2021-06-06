@@ -31,7 +31,14 @@ joint_probs_func_t joint_probs_baseline, joint_probs_unroll8,
 grad_desc_func_t grad_desc_baseline;
 
 // Put all euclidean_dist function declarations here.
-euclidean_dist_func_t euclidean_dist_baseline;
+euclidean_dist_func_t euclidean_dist_baseline, euclidean_dist_unroll2,
+    euclidean_dist_unroll4, euclidean_dist_unroll8, euclidean_dist_block8,
+    euclidean_dist_block8x8, euclidean_dist_alt_baseline,
+    euclidean_dist_alt_unroll2, euclidean_dist_alt_unroll4,
+    euclidean_dist_alt_unroll8, euclidean_dist_alt_unroll16,
+    euclidean_dist_alt_block4x4, euclidean_dist_alt_vec,
+    euclidean_dist_alt_vec_unroll2, euclidean_dist_alt_vec_unroll4,
+    euclidean_dist_alt_vec_unroll8, euclidean_dist_alt_vec_unroll4x4;
 
 template <class T>
 class FuncRegistry {
