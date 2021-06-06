@@ -33,9 +33,30 @@ void register_functions() {
       .add_function(&log_perplexity_unroll8, "log_perplexity_unroll8")
       .add_function(&log_perplexity_avx, "log_perplexity_avx")
       .add_function(&log_perplexity_avx_acc4, "log_perplexity_avx_acc4")
-      .add_function(&log_perplexity_avx_fma_acc4, "log_perplexity_avx_fma_acc4");
+      .add_function(&log_perplexity_avx_fma_acc4,
+                    "log_perplexity_avx_fma_acc4");
 
   // Put all euclidean_dist functions to test here.
-  euclidean_dist_func_registry.add_function(&euclidean_dist_baseline,
-                                            "euclidean_dist_baseline");
+  euclidean_dist_func_registry
+      .add_function(&euclidean_dist_baseline, "euclidean_dist_baseline")
+      .add_function(&euclidean_dist_unroll2, "euclidean_dist_unroll2")
+      .add_function(&euclidean_dist_unroll4, "euclidean_dist_unroll4")
+      .add_function(&euclidean_dist_unroll8, "euclidean_dist_unroll8")
+      .add_function(&euclidean_dist_block8, "euclidean_dist_block8")
+      .add_function(&euclidean_dist_block8x8, "euclidean_dist_block8x8")
+      .add_function(&euclidean_dist_alt_baseline, "euclidean_dist_alt_baseline")
+      .add_function(&euclidean_dist_alt_unroll2, "euclidean_dist_alt_unroll2")
+      .add_function(&euclidean_dist_alt_unroll4, "euclidean_dist_alt_unroll4")
+      .add_function(&euclidean_dist_alt_unroll8, "euclidean_dist_alt_unroll8")
+      .add_function(&euclidean_dist_alt_unroll16, "euclidean_dist_alt_unroll16")
+      .add_function(&euclidean_dist_alt_block4x4, "euclidean_dist_alt_block4x4")
+      .add_function(&euclidean_dist_alt_vec, "euclidean_dist_alt_vec")
+      .add_function(&euclidean_dist_alt_vec_unroll2,
+                    "euclidean_dist_alt_vec_unroll2")
+      .add_function(&euclidean_dist_alt_vec_unroll4,
+                    "euclidean_dist_alt_vec_unroll4")
+      .add_function(&euclidean_dist_alt_vec_unroll8,
+                    "euclidean_dist_alt_vec_unroll8")
+      .add_function(&euclidean_dist_alt_vec_unroll4x4,
+                    "euclidean_dist_alt_vec_unroll4x4");
 }
