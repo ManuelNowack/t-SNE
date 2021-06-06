@@ -71,14 +71,14 @@ void grad_desc_no_vars_baseline(Matrix *Y, tsne_var_t *var, int n, int m,
     var->tmp.data[i * n + i] = 0.0;
   }
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       double value = 0.0;
       for (int j = 0; j < n; j++) {
         value += var->tmp.data[i * n + j] *
-                 (Y->data[i * m + k] - Y->data[j * m + k]);
+                 (Y->data[i * m + l] - Y->data[j * m + l]);
       }
       value *= 4.0;
-      var->grad_Y.data[i * m + k] = value;
+      var->grad_Y.data[i * m + l] = value;
     }
   }
 
@@ -189,21 +189,21 @@ void grad_desc_no_vars_tmp(Matrix *Y, tsne_var_t *var, int n, int m,
 
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       double sum = 0.0;
       for (int j = 0; j < n; j++) {
         const double tmp_value =
             (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
             var->Q_numerators.data[i * n + j];
         const double value =
-            tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
+            tmp_value * (Y->data[i * m + l] - Y->data[j * m + l]);
         sum += value;
         if (WRITE_ALL_VARS) {
           var->tmp.data[i * n + j] = tmp_value;
         }
       }
       const double value = 4.0 * sum;
-      var->grad_Y.data[i * m + k] = value;
+      var->grad_Y.data[i * m + l] = value;
     }
   }
 
@@ -307,21 +307,21 @@ void grad_desc_no_vars_D(Matrix *Y, tsne_var_t *var, int n, int m,
 
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       double sum = 0.0;
       for (int j = 0; j < n; j++) {
         const double tmp_value =
             (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
             var->Q_numerators.data[i * n + j];
         const double value =
-            tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
+            tmp_value * (Y->data[i * m + l] - Y->data[j * m + l]);
         sum += value;
         if (WRITE_ALL_VARS) {
           var->tmp.data[i * n + j] = tmp_value;
         }
       }
       const double value = 4.0 * sum;
-      var->grad_Y.data[i * m + k] = value;
+      var->grad_Y.data[i * m + l] = value;
     }
   }
 
@@ -414,7 +414,7 @@ void grad_desc_no_vars_Q(Matrix *Y, tsne_var_t *var, int n, int m,
 
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       sum = 0.0;
       for (int j = 0; j < n; j++) {
         double q_value = var->Q_numerators.data[i * n + j];
@@ -426,7 +426,7 @@ void grad_desc_no_vars_Q(Matrix *Y, tsne_var_t *var, int n, int m,
         const double tmp_value = (var->P.data[i * n + j] - q_value) *
                                  var->Q_numerators.data[i * n + j];
         const double value =
-            tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
+            tmp_value * (Y->data[i * m + l] - Y->data[j * m + l]);
         sum += value;
         if (WRITE_ALL_VARS) {
           var->tmp.data[i * n + j] = tmp_value;
@@ -437,7 +437,7 @@ void grad_desc_no_vars_Q(Matrix *Y, tsne_var_t *var, int n, int m,
         }
       }
       const double value = 4.0 * sum;
-      var->grad_Y.data[i * m + k] = value;
+      var->grad_Y.data[i * m + l] = value;
     }
   }
 
@@ -530,12 +530,12 @@ void grad_desc_no_vars_Q_numerators(Matrix *Y, tsne_var_t *var, int n, int m,
 
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       sum = 0.0;
       for (int j = 0; j < n; j++) {
         double dist_sum = 0.0;
-        for (int l = 0; l < m; l++) {
-          const double dist = Y->data[i * m + l] - Y->data[j * m + l];
+        for (int k = 0; k < m; k++) {
+          const double dist = Y->data[i * m + k] - Y->data[j * m + k];
           dist_sum += dist * dist;
         }
         const double q_numerator_value = 1.0 / (1.0 + dist_sum);
@@ -550,7 +550,7 @@ void grad_desc_no_vars_Q_numerators(Matrix *Y, tsne_var_t *var, int n, int m,
             (i == j) ? 0.0
                      : (var->P.data[i * n + j] - q_value) * q_numerator_value;
         const double value =
-            tmp_value * (Y->data[i * m + k] - Y->data[j * m + k]);
+            tmp_value * (Y->data[i * m + l] - Y->data[j * m + l]);
         sum += value;
         if (WRITE_ALL_VARS) {
           var->tmp.data[i * n + j] = tmp_value;
@@ -561,7 +561,7 @@ void grad_desc_no_vars_Q_numerators(Matrix *Y, tsne_var_t *var, int n, int m,
         }
       }
       const double value = 4.0 * sum;
-      var->grad_Y.data[i * m + k] = value;
+      var->grad_Y.data[i * m + l] = value;
     }
   }
 
@@ -638,12 +638,12 @@ void grad_desc_no_vars_scalar_pure(double *Y, const double *P, double *grad_Y,
   const double norm = 0.5 / sum;
 
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < m; k++) {
+    for (int l = 0; l < m; l++) {
       sum = 0.0;
       for (int j = 0; j < n; j++) {
         double dist_sum = 0.0;
-        for (int l = 0; l < m; l++) {
-          const double dist = Y[i * m + l] - Y[j * m + l];
+        for (int k = 0; k < m; k++) {
+          const double dist = Y[i * m + k] - Y[j * m + k];
           dist_sum += dist * dist;
         }
         const double q_numerator_value = 1.0 / (1.0 + dist_sum);
@@ -656,11 +656,11 @@ void grad_desc_no_vars_scalar_pure(double *Y, const double *P, double *grad_Y,
 
         const double tmp_value =
             (i == j) ? 0.0 : (P[i * n + j] - q_value) * q_numerator_value;
-        const double value = tmp_value * (Y[i * m + k] - Y[j * m + k]);
+        const double value = tmp_value * (Y[i * m + l] - Y[j * m + l]);
         sum += value;
       }
       const double value = 4.0 * sum;
-      grad_Y[i * m + k] = value;
+      grad_Y[i * m + l] = value;
     }
   }
 
