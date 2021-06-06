@@ -58,5 +58,30 @@ void register_functions() {
       .add_function(&euclidean_dist_alt_vec_unroll8,
                     "euclidean_dist_alt_vec_unroll8")
       .add_function(&euclidean_dist_alt_vec_unroll4x4,
-                    "euclidean_dist_alt_vec_unroll4x4");
+                    "euclidean_dist_alt_vec_unroll4x4")
+      .add_function(&euclidean_dist_low_upper, "euclidean_dist_low_upper")
+      .add_function(&euclidean_dist_low_unroll, "euclidean_dist_low_unroll")
+      .add_function(&euclidean_dist_low_block2, "euclidean_dist_low_block2")
+      .add_function(&euclidean_dist_low_block4, "euclidean_dist_low_block4")
+      .add_function(&euclidean_dist_low_block8, "euclidean_dist_low_block8")
+      .add_function(&euclidean_dist_low_block16, "euclidean_dist_low_block16")
+      .add_function(&euclidean_dist_low_block32, "euclidean_dist_low_block32")
+      .add_function(&euclidean_dist_low_block64, "euclidean_dist_low_block64")
+      .add_function(&euclidean_dist_low_block128, "euclidean_dist_low_block128")
+      .add_function(&euclidean_dist_low_vec1, "euclidean_dist_low_vec1")
+      .add_function(&euclidean_dist_low_vec2, "euclidean_dist_low_vec2")
+      .add_function(&euclidean_dist_low_vec3, "euclidean_dist_low_vec3")
+      .add_function(&euclidean_dist_low_vec4, "euclidean_dist_low_vec4")
+      .add_function(&euclidean_dist_low_vec3_unroll2,
+                    "euclidean_dist_low_vec3_unroll2")
+      .add_function(&euclidean_dist_low_vec3_unroll4,
+                    "euclidean_dist_low_vec3_unroll4")
+      .add_function(&euclidean_dist_low_vec3_unroll8,
+                    "euclidean_dist_low_vec3_unroll8")
+      .add_function(&euclidean_dist_low_vec3_unroll4x8,
+                    "euclidean_dist_low_vec3_unroll4x8")
+      .add_function(&euclidean_dist_low_vec3_unroll4x8_stream,
+                    "euclidean_dist_low_vec3_unroll4x8_stream")
+      .add_function(&euclidean_dist_low_vec3_unroll8_stream,
+                    "euclidean_dist_low_vec3_unroll8_stream");
 }
