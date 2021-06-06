@@ -35,7 +35,8 @@ void register_functions() {
       .add_function(&grad_desc_no_vars_no_if, "grad_desc_no_vars_no_if")
       .add_function(&grad_desc_no_vars_unroll2, "grad_desc_no_vars_unroll2")
       .add_function(&grad_desc_no_vars_unroll4, "grad_desc_no_vars_unroll4")
-      .add_function(&grad_desc_no_vars_unroll6, "grad_desc_no_vars_unroll6");
+      .add_function(&grad_desc_no_vars_unroll6, "grad_desc_no_vars_unroll6")
+      .add_function(&grad_desc_no_vars_unroll8, "grad_desc_no_vars_unroll8");
 
   // Put all log_perplexity functions to test here.
   log_perplexity_func_registry
