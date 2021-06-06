@@ -875,8 +875,42 @@ void grad_desc_no_vars_unroll2_pure(double *Y, const double *P, double *grad_Y,
 
   for (int i = 0; i < n; i++) {
     for (int l = 0; l < m; l++) {
+      constexpr int unroll_factor = 2;
+      const int end = n / unroll_factor * unroll_factor;
       sum = 0.0;
-      for (int j = 0; j < n; j++) {
+      // main
+      for (int j = 0; j < end; j += unroll_factor) {
+        double dist_sum_1 = 0.0;
+        double dist_sum_2 = 0.0;
+        for (int k = 0; k < m; k++) {
+          const double dist_1 = Y[i * m + k] - Y[j * m + k];
+          const double dist_2 = Y[i * m + k] - Y[(j + 1) * m + k];
+          dist_sum_1 += dist_1 * dist_1;
+          dist_sum_2 += dist_2 * dist_2;
+        }
+        const double q_numerator_value_1 = 1.0 / (1.0 + dist_sum_1);
+        const double q_numerator_value_2 = 1.0 / (1.0 + dist_sum_2);
+
+        double q_value_1 = q_numerator_value_1;
+        q_value_1 *= norm;
+        if (q_value_1 < kMinimumProbability) {
+          q_value_1 = kMinimumProbability;
+        }
+        double q_value_2 = q_numerator_value_2;
+        q_value_2 *= norm;
+        if (q_value_2 < kMinimumProbability) {
+          q_value_2 = kMinimumProbability;
+        }
+
+        const double tmp_value_1 = (P[i * n + j] - q_value_1) * q_numerator_value_1;
+        const double tmp_value_2 = (P[i * n + (j + 1)] - q_value_2) * q_numerator_value_2;
+        const double value_1 = tmp_value_1 * (Y[i * m + l] - Y[j * m + l]);
+        const double value_2 = tmp_value_2 * (Y[i * m + l] - Y[(j + 1) * m + l]);
+        sum += value_1;
+        sum += value_2;
+      }
+      // end
+      for (int j = end; j < n; j++) {
         double dist_sum = 0.0;
         for (int k = 0; k < m; k++) {
           const double dist = Y[i * m + k] - Y[j * m + k];
