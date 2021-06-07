@@ -505,8 +505,8 @@ void _grad_desc_vec(Matrix *Y, tsne_var_t *var, int n, int n_dim, double momentu
         gainsmul_right = _mm256_mul_pd(gainsright, mulconst);
         gainsplus_left = _mm256_add_pd(gainsleft, addconst);
         gainsplus_right = _mm256_add_pd(gainsright, addconst);
-        mask_left = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left));
-        mask_right = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right));
+        mask_left = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left)));
+        mask_right = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right)));
 
         gainsmul_left = _mm256_and_pd(mask_left, gainsmul_left);
         gainsmul_right = _mm256_and_pd(mask_right, gainsmul_right);
@@ -742,8 +742,8 @@ void _grad_desc_vec2(Matrix *Y, tsne_var_t *var, int n, int n_dim, double moment
     gainsmul_right = _mm256_mul_pd(gainsright, mulconst);
     gainsplus_left = _mm256_add_pd(gainsleft, addconst);
     gainsplus_right = _mm256_add_pd(gainsright, addconst);
-    mask_left = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left));
-    mask_right = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right));
+    mask_left = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left)));
+    mask_right = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right)));
 
     gainsmul_left = _mm256_and_pd(mask_left, gainsmul_left);
     gainsmul_right = _mm256_and_pd(mask_right, gainsmul_right);
@@ -1122,8 +1122,8 @@ void _grad_desc_vec3(Matrix *Y, tsne_var_t *var, int n, int n_dim, double moment
     gainsmul_right = _mm256_mul_pd(gainsright, mulconst);
     gainsplus_left = _mm256_add_pd(gainsleft, addconst);
     gainsplus_right = _mm256_add_pd(gainsright, addconst);
-    mask_left = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left));
-    mask_right = _mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right));
+    mask_left = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_left), _mm256_castpd_si256(pos_delta_left)));
+    mask_right = _mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(pos_grad_right), _mm256_castpd_si256(pos_delta_right)));
 
     gainsmul_left = _mm256_and_pd(mask_left, gainsmul_left);
     gainsmul_right = _mm256_and_pd(mask_right, gainsmul_right);
