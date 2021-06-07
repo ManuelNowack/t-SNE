@@ -99,4 +99,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Jupyter notebook
+.ipynb_checkpoints
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,cmake,windows
