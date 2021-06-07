@@ -13,7 +13,11 @@ void register_functions() {
       FuncRegistry<euclidean_dist_func_t>::get_instance();
 
   // Put all tsne functions to test here.
-  tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline");
+  tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline")
+      .add_function(&tsne_scalar, "tsne_scalar")
+      .add_function(&tsne_vec, "tsne_vec")
+      .add_function(&tsne_vec2, "tsne_vec2")
+      .add_function(&tsne_vec3, "tsne_vec3");
 
   // Put all (at least one!) joint_probs functions to test here.
   joint_probs_func_registry
