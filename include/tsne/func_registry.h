@@ -39,7 +39,17 @@ euclidean_dist_func_t euclidean_dist_baseline, euclidean_dist_unroll2,
     euclidean_dist_alt_unroll8, euclidean_dist_alt_unroll16,
     euclidean_dist_alt_block4x4, euclidean_dist_alt_vec,
     euclidean_dist_alt_vec_unroll2, euclidean_dist_alt_vec_unroll4,
-    euclidean_dist_alt_vec_unroll8, euclidean_dist_alt_vec_unroll4x4;
+    euclidean_dist_alt_vec_unroll8, euclidean_dist_alt_vec_unroll4x4,
+    euclidean_dist_low_upper, euclidean_dist_low_unroll,
+    euclidean_dist_low_block2, euclidean_dist_low_block4,
+    euclidean_dist_low_block8, euclidean_dist_low_block16,
+    euclidean_dist_low_block32, euclidean_dist_low_block64,
+    euclidean_dist_low_block128, euclidean_dist_low_vec1,
+    euclidean_dist_low_vec2, euclidean_dist_low_vec3, euclidean_dist_low_vec4,
+    euclidean_dist_low_vec3_unroll2, euclidean_dist_low_vec3_unroll4,
+    euclidean_dist_low_vec3_unroll8, euclidean_dist_low_vec3_unroll4x8,
+    euclidean_dist_low_vec3_unroll4x8_stream,
+    euclidean_dist_low_vec3_unroll8_stream;
 
 template <class T>
 class FuncRegistry {
