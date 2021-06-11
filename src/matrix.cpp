@@ -4,6 +4,30 @@
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
+
+void create_tsne_variables(tsne_var_t &var, int n, int m) {
+  var.P = create_matrix(n, n);
+  var.Q = create_matrix(n, n);
+  var.Q_numerators = create_matrix(n, n);
+  var.grad_Y = create_matrix(n, m);
+  var.Y_delta = create_matrix(n, m);
+  var.tmp = create_matrix(n, n);
+  var.gains = create_matrix(n, m);
+  var.D = create_matrix(n, n);
+}
+
+void destroy_tsne_variables(tsne_var_t &var) {
+  free(var.P.data);
+  free(var.Q.data);
+  free(var.Q_numerators.data);
+  free(var.grad_Y.data);
+  free(var.Y_delta.data);
+  free(var.tmp.data);
+  free(var.gains.data);
+  free(var.D.data);
+}
+
+
 /*
  * Load data in text file at filepath into Matrix structure.
  */
