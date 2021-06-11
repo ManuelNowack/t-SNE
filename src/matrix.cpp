@@ -132,7 +132,7 @@ void assert_finite_matrix(Matrix A) {
   throw std::runtime_error("assert_finite_matrix not implemented.");
 }
 
-void copy_matrix(Matrix *orig, Matrix *copy) {
+void copy_matrix(const Matrix *orig, Matrix *copy) {
   copy->ncols = orig->ncols;
   copy->nrows = orig->nrows;
   size_t datasize = copy->nrows * copy->ncols * sizeof(double);
