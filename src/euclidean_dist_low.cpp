@@ -1094,3 +1094,71 @@ void euclidean_dist_low_vec3_unroll8_stream(Matrix *X, Matrix *D) {
     }
   }
 }
+
+/*
+* Vector unrolling 4 by 4.
+*/
+void euclidean_dist_low_vec3_unroll4x4(Matrix *X, Matrix *D) {
+
+  int n = X->nrows;
+  int m = X->ncols;
+
+  double *X_data = X->data;
+  double *D_data = D->data;
+
+  __m256i index = _mm256_set_epi64x(6, 4, 2, 0);
+
+  for (int i = 0; i < 4*(n/4); i+=4) {
+
+    __m256d x00 = _mm256_broadcast_sd(X_data + m*i);
+    __m256d x01 = _mm256_broadcast_sd(X_data + m*i + 1);
+
+    __m256d x10 = _mm256_broadcast_sd(X_data + m*i + 2);
+    __m256d x11 = _mm256_broadcast_sd(X_data + m*i + 3);
+
+    __m256d x20 = _mm256_broadcast_sd(X_data + m*i + 4);
+    __m256d x21 = _mm256_broadcast_sd(X_data + m*i + 5);
+
+    __m256d x30 = _mm256_broadcast_sd(X_data + m*i + 6);
+    __m256d x31 = _mm256_broadcast_sd(X_data + m*i + 7);
+
+    int j = 4*(i/4);
+    for (; j < 4*(n/4); j+=4) {
+
+      __m256d y00 = _mm256_i64gather_pd(X_data + m*j, index, 8);
+      __m256d y01 = _mm256_i64gather_pd(X_data + m*j + 1, index, 8);
+
+
+      __m256d diff000 = _mm256_sub_pd(x00, y00);
+      __m256d diff001 = _mm256_sub_pd(x01, y01);
+
+      __m256d prod00 = _mm256_mul_pd(diff000, diff000);
+      __m256d dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
+      _mm256_storeu_pd(D_data + n*i + j, dists00);
+
+
+      __m256d diff100 = _mm256_sub_pd(x10, y00);
+      __m256d diff101 = _mm256_sub_pd(x11, y01);
+
+      __m256d prod10 = _mm256_mul_pd(diff100, diff100);
+      __m256d dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
+      _mm256_storeu_pd(D_data + n*i + n + j, dists10);
+
+
+      __m256d diff200 = _mm256_sub_pd(x20, y00);
+      __m256d diff201 = _mm256_sub_pd(x21, y01);
+
+      __m256d prod20 = _mm256_mul_pd(diff200, diff200);
+      __m256d dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
+      _mm256_storeu_pd(D_data + n*i + 2*n + j, dists20);
+
+
+      __m256d diff300 = _mm256_sub_pd(x30, y00);
+      __m256d diff301 = _mm256_sub_pd(x31, y01);
+
+      __m256d prod30 = _mm256_mul_pd(diff300, diff300);
+      __m256d dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
+      _mm256_storeu_pd(D_data + n*i + 3*n + j, dists30);
+    }
+  }
+}

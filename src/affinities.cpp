@@ -3,6 +3,22 @@
 #include "tsne/debug.h"
 #include "tsne/hyperparams.h"
 #include "tsne/matrix.h"
+#include <tsne/func_registry.h>
+
+
+#define TRANSPOSE_4X4(a, b, c, d, at, bt, ct, dt) \
+__m256d ab_lo = _mm256_unpacklo_pd(a, b);\
+__m256d ab_hi = _mm256_unpackhi_pd(a, b);\
+__m256d cd_lo = _mm256_unpacklo_pd(c, d);\
+__m256d cd_hi = _mm256_unpackhi_pd(c, d);\
+__m256d ab_lo_swap = _mm256_permute4x64_pd(ab_lo, 0b01001110);\
+__m256d ab_hi_swap = _mm256_permute4x64_pd(ab_hi, 0b01001110);\
+__m256d cd_lo_swap = _mm256_permute4x64_pd(cd_lo, 0b01001110);\
+__m256d cd_hi_swap = _mm256_permute4x64_pd(cd_hi, 0b01001110);\
+at = _mm256_blend_pd(ab_lo, cd_lo_swap, 0b1100);\
+bt = _mm256_blend_pd(ab_hi, cd_hi_swap, 0b1100);\
+ct = _mm256_blend_pd(cd_lo, ab_lo_swap, 0b0011);\
+dt = _mm256_blend_pd(cd_hi, ab_hi_swap, 0b0011);
 
 void euclidean_dist_baseline(Matrix *X, Matrix *D);
 
@@ -708,6 +724,192 @@ void affinities_accumulator(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *
         value = kMinimumProbability;
       }
       Q->data[i * n + j] = value;
+    }
+  }
+}
+
+/*
+* Affinities combined with euclidean dist and 4x4 unrolling.
+* 4x4 instead of 4x8 to simplify implementation.
+*/
+void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D) {
+
+  int n = Y->nrows;
+  int m = Y->ncols;
+
+  double *Y_data = Y->data;
+  double *Q_data = Q->data;
+  double *Q_numerators_data = Q_numerators->data;
+
+  const __m256i index = _mm256_set_epi64x(6, 4, 2, 0);
+  const __m256d onehalf_vec = _mm256_set1_pd(0.5);
+  const __m256d one_vec = _mm256_set1_pd(1);
+  const __m256d two_vec = _mm256_set1_pd(2);
+  const __m256d zero_vec = _mm256_setzero_pd();
+
+  __m256d sum = _mm256_setzero_pd();
+
+  for (int i = 0; i < 4*(n/4); i+=4) {
+
+    __m256d x00 = _mm256_broadcast_sd(Y_data + m*i);
+    __m256d x01 = _mm256_broadcast_sd(Y_data + m*i + 1);
+
+    __m256d x10 = _mm256_broadcast_sd(Y_data + m*i + 2);
+    __m256d x11 = _mm256_broadcast_sd(Y_data + m*i + 3);
+
+    __m256d x20 = _mm256_broadcast_sd(Y_data + m*i + 4);
+    __m256d x21 = _mm256_broadcast_sd(Y_data + m*i + 5);
+
+    __m256d x30 = _mm256_broadcast_sd(Y_data + m*i + 6);
+    __m256d x31 = _mm256_broadcast_sd(Y_data + m*i + 7);
+
+
+    // Diagonal block
+    int j = i;
+    __m256d y00 = _mm256_i64gather_pd(Y_data + m*j, index, 8);
+    __m256d y01 = _mm256_i64gather_pd(Y_data + m*j + 1, index, 8);
+
+
+    __m256d diff000 = _mm256_sub_pd(x00, y00);
+    __m256d diff001 = _mm256_sub_pd(x01, y01);
+
+    __m256d prod00 = _mm256_mul_pd(diff000, diff000);
+    __m256d dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
+    __m256d qnum00 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists00));
+    qnum00 = _mm256_blend_pd(qnum00, zero_vec, 0b0001);
+    sum = _mm256_fmadd_pd(qnum00, onehalf_vec, sum);
+    _mm256_storeu_pd(Q_numerators_data + n*i + j, qnum00);
+
+
+    __m256d diff100 = _mm256_sub_pd(x10, y00);
+    __m256d diff101 = _mm256_sub_pd(x11, y01);
+
+    __m256d prod10 = _mm256_mul_pd(diff100, diff100);
+    __m256d dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
+    __m256d qnum10 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists10));
+    qnum10 = _mm256_blend_pd(qnum10, zero_vec, 0b0010);
+    sum = _mm256_fmadd_pd(qnum10, onehalf_vec, sum);
+    _mm256_storeu_pd(Q_numerators_data + n*i + n + j, qnum10);
+
+
+    __m256d diff200 = _mm256_sub_pd(x20, y00);
+    __m256d diff201 = _mm256_sub_pd(x21, y01);
+
+    __m256d prod20 = _mm256_mul_pd(diff200, diff200);
+    __m256d dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
+    __m256d qnum20 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists20));
+    qnum20 = _mm256_blend_pd(qnum20, zero_vec, 0b0100);
+    sum = _mm256_fmadd_pd(qnum20, onehalf_vec, sum);
+    _mm256_storeu_pd(Q_numerators_data + n*i + 2*n + j, qnum20);
+
+
+    __m256d diff300 = _mm256_sub_pd(x30, y00);
+    __m256d diff301 = _mm256_sub_pd(x31, y01);
+
+    __m256d prod30 = _mm256_mul_pd(diff300, diff300);
+    __m256d dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
+    __m256d qnum30 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists30));
+    qnum30 = _mm256_blend_pd(qnum30, zero_vec, 0b1000);
+    sum = _mm256_fmadd_pd(qnum30, onehalf_vec, sum);
+    _mm256_storeu_pd(Q_numerators_data + n*i + 3*n + j, qnum30);
+
+    // Non-diagonal blocks
+    j = i + 4;
+    for (; j < 4*(n/4); j+=4) {
+
+      __m256d y00 = _mm256_i64gather_pd(Y_data + m*j, index, 8);
+      __m256d y01 = _mm256_i64gather_pd(Y_data + m*j + 1, index, 8);
+
+
+      __m256d diff000 = _mm256_sub_pd(x00, y00);
+      __m256d diff001 = _mm256_sub_pd(x01, y01);
+
+      __m256d prod00 = _mm256_mul_pd(diff000, diff000);
+      __m256d dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
+      __m256d qnum00 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists00));
+      sum = _mm256_add_pd(qnum00, sum);
+      _mm256_storeu_pd(Q_numerators_data + n*i + j, qnum00);
+
+
+      __m256d diff100 = _mm256_sub_pd(x10, y00);
+      __m256d diff101 = _mm256_sub_pd(x11, y01);
+
+      __m256d prod10 = _mm256_mul_pd(diff100, diff100);
+      __m256d dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
+      __m256d qnum10 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists10));
+      sum = _mm256_add_pd(qnum10, sum);
+      _mm256_storeu_pd(Q_numerators_data + n*i + n + j, qnum10);
+
+
+      __m256d diff200 = _mm256_sub_pd(x20, y00);
+      __m256d diff201 = _mm256_sub_pd(x21, y01);
+
+      __m256d prod20 = _mm256_mul_pd(diff200, diff200);
+      __m256d dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
+      __m256d qnum20 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists20));
+      sum = _mm256_add_pd(qnum20, sum);
+      _mm256_storeu_pd(Q_numerators_data + n*i + 2*n + j, qnum20);
+
+
+      __m256d diff300 = _mm256_sub_pd(x30, y00);
+      __m256d diff301 = _mm256_sub_pd(x31, y01);
+
+      __m256d prod30 = _mm256_mul_pd(diff300, diff300);
+      __m256d dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
+      __m256d qnum30 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists30));
+      sum = _mm256_add_pd(qnum30, sum);
+      _mm256_storeu_pd(Q_numerators_data + n*i + 3*n + j, qnum30);
+
+
+      // Fill lower triangular 4x4 block
+      __m256d qnum00t, qnum10t, qnum20t, qnum30t;
+      TRANSPOSE_4X4(qnum00, qnum10, qnum20, qnum30, qnum00t, qnum10t, qnum20t, qnum30t);
+      _mm256_storeu_pd(Q_numerators_data + n*j + i, qnum00t);
+      _mm256_storeu_pd(Q_numerators_data + n*j + n + i, qnum10t);
+      _mm256_storeu_pd(Q_numerators_data + n*j + 2*n + i, qnum20t);
+      _mm256_storeu_pd(Q_numerators_data + n*j + 3*n + i, qnum30t);
+    }
+  }
+
+  sum = _mm256_mul_pd(sum, two_vec); // Only upper triangular elements were summed
+
+
+  // Normalize
+  
+  __m256d norm = _mm256_hadd_pd(sum, sum);
+  norm = _mm256_add_pd(norm, _mm256_permute4x64_pd(norm, 0b01001110));
+  norm = _mm256_div_pd(one_vec, norm);
+
+  __m256d vec_min_prob = _mm256_set1_pd(kMinimumProbability);
+  for (int i = 0; i < 4*(n/4); i+=4) {
+    for (int j = i; j < 4*(n/4); j+=4) {
+      __m256d q0 = _mm256_load_pd(Q_numerators_data + n*i + j);
+      __m256d q1 = _mm256_load_pd(Q_numerators_data + n*i + n + j);
+      __m256d q2 = _mm256_load_pd(Q_numerators_data + n*i + 2*n + j);
+      __m256d q3 = _mm256_load_pd(Q_numerators_data + n*i + 3*n + j);
+
+      q0 = _mm256_mul_pd(q0, norm);
+      q1 = _mm256_mul_pd(q1, norm);
+      q2 = _mm256_mul_pd(q2, norm);
+      q3 = _mm256_mul_pd(q3, norm);
+
+      q0 = _mm256_max_pd(q0, vec_min_prob);
+      q1 = _mm256_max_pd(q1, vec_min_prob);
+      q2 = _mm256_max_pd(q2, vec_min_prob);
+      q3 = _mm256_max_pd(q3, vec_min_prob);
+
+      _mm256_store_pd(Q_data + n*i + j, q0);
+      _mm256_store_pd(Q_data + n*i + n + j, q1);
+      _mm256_store_pd(Q_data + n*i + 2*n + j, q2);
+      _mm256_store_pd(Q_data + n*i + 3*n + j, q3);
+
+      // Fill lower triangular 4x4 block
+      __m256d q0t, q1t, q2t, q3t;
+      TRANSPOSE_4X4(q0, q1, q2, q3, q0t, q1t, q2t, q3t);
+      _mm256_store_pd(Q_data + n*j + i, q0t);
+      _mm256_store_pd(Q_data + n*j + n + i, q1t);
+      _mm256_store_pd(Q_data + n*j + 2*n + i, q2t);
+      _mm256_store_pd(Q_data + n*j + 3*n + i, q3t);
     }
   }
 }
