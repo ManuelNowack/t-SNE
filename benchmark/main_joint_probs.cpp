@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
 
     int n_samples = n_samples_values[i_measurement];
     Matrix X_sub = {.nrows = n_samples, .ncols = X.ncols, .data = X.data};
-    Matrix Y_sub = {.nrows = n_samples, .ncols = Y.ncols, .data = Y.data};
 
     int i_series = 0;
 
