@@ -94,7 +94,7 @@ void load_matrix(const char *filepath, Matrix *A) {
 /*
  * Store matrix A into a text file at filepath.
  */
-void store_matrix(const char *filepath, Matrix A) {
+void store_matrix(const char *filepath, Matrix *A) {
   FILE *out_file = fopen(filepath, "w");
 
   if (out_file == NULL) {
@@ -102,14 +102,14 @@ void store_matrix(const char *filepath, Matrix A) {
         std::string("Could not store matrix to filepath ") + filepath);
   }
 
-  int n = A.nrows;
-  int m = A.ncols;
+  int n = A->nrows;
+  int m = A->ncols;
 
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m - 1; j++) {
-      fprintf(out_file, "%.18e ", A.data[m * i + j]);
+      fprintf(out_file, "%.18e ", A->data[m * i + j]);
     }
-    fprintf(out_file, "%.18e\n", A.data[m * i + m - 1]);
+    fprintf(out_file, "%.18e\n", A->data[m * i + m - 1]);
   }
 
   fclose(out_file);
