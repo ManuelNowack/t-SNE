@@ -817,46 +817,46 @@ void affinities_vec_unroll4x4(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix
     j = i + 4;
     for (; j < 4*(n/4); j+=4) {
 
-      __m256d y00 = _mm256_i64gather_pd(Y_data + m*j, index, 8);
-      __m256d y01 = _mm256_i64gather_pd(Y_data + m*j + 1, index, 8);
+      y00 = _mm256_i64gather_pd(Y_data + m*j, index, 8);
+      y01 = _mm256_i64gather_pd(Y_data + m*j + 1, index, 8);
 
 
-      __m256d diff000 = _mm256_sub_pd(x00, y00);
-      __m256d diff001 = _mm256_sub_pd(x01, y01);
+      diff000 = _mm256_sub_pd(x00, y00);
+      diff001 = _mm256_sub_pd(x01, y01);
 
-      __m256d prod00 = _mm256_mul_pd(diff000, diff000);
-      __m256d dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
-      __m256d qnum00 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists00));
+      prod00 = _mm256_mul_pd(diff000, diff000);
+      dists00 = _mm256_fmadd_pd(diff001, diff001, prod00);
+      qnum00 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists00));
       sum = _mm256_add_pd(qnum00, sum);
       _mm256_storeu_pd(Q_numerators_data + n*i + j, qnum00);
 
 
-      __m256d diff100 = _mm256_sub_pd(x10, y00);
-      __m256d diff101 = _mm256_sub_pd(x11, y01);
+      diff100 = _mm256_sub_pd(x10, y00);
+      diff101 = _mm256_sub_pd(x11, y01);
 
-      __m256d prod10 = _mm256_mul_pd(diff100, diff100);
-      __m256d dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
-      __m256d qnum10 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists10));
+      prod10 = _mm256_mul_pd(diff100, diff100);
+      dists10 = _mm256_fmadd_pd(diff101, diff101, prod10);
+      qnum10 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists10));
       sum = _mm256_add_pd(qnum10, sum);
       _mm256_storeu_pd(Q_numerators_data + n*i + n + j, qnum10);
 
 
-      __m256d diff200 = _mm256_sub_pd(x20, y00);
-      __m256d diff201 = _mm256_sub_pd(x21, y01);
+      diff200 = _mm256_sub_pd(x20, y00);
+      diff201 = _mm256_sub_pd(x21, y01);
 
-      __m256d prod20 = _mm256_mul_pd(diff200, diff200);
-      __m256d dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
-      __m256d qnum20 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists20));
+      prod20 = _mm256_mul_pd(diff200, diff200);
+      dists20 = _mm256_fmadd_pd(diff201, diff201, prod20);
+      qnum20 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists20));
       sum = _mm256_add_pd(qnum20, sum);
       _mm256_storeu_pd(Q_numerators_data + n*i + 2*n + j, qnum20);
 
 
-      __m256d diff300 = _mm256_sub_pd(x30, y00);
-      __m256d diff301 = _mm256_sub_pd(x31, y01);
+      diff300 = _mm256_sub_pd(x30, y00);
+      diff301 = _mm256_sub_pd(x31, y01);
 
-      __m256d prod30 = _mm256_mul_pd(diff300, diff300);
-      __m256d dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
-      __m256d qnum30 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists30));
+      prod30 = _mm256_mul_pd(diff300, diff300);
+      dists30 = _mm256_fmadd_pd(diff301, diff301, prod30);
+      qnum30 = _mm256_div_pd(one_vec, _mm256_add_pd(one_vec, dists30));
       sum = _mm256_add_pd(qnum30, sum);
       _mm256_storeu_pd(Q_numerators_data + n*i + 3*n + j, qnum30);
 
