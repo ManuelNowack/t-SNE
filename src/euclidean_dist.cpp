@@ -120,7 +120,7 @@ void euclidean_dist_unroll8(Matrix *X, Matrix *D) {
         sums[7] += dist * dist;
       }
       for (; k < m; k++) {
-        double dist = X->data[i * m + k] - X->data[j * m + k];
+        dist = X->data[i * m + k] - X->data[j * m + k];
         sums[0] += dist * dist;
       }
       double sum04 = (sums[0] + sums[1]) + (sums[2] + sums[3]);
@@ -1467,8 +1467,8 @@ void euclidean_dist_alt_vec_unroll8(Matrix *X, Matrix *D) {
   }
 
   // Set diagonal elements
-  for (int i = 0; i < n; i++) {
-    D_data[i * n + i] = 0.0;
+  for (int j = 0; j < n; j++) {
+    D_data[j * n + j] = 0.0;
   }
 }
 
@@ -1853,7 +1853,7 @@ void euclidean_dist_alt_vec_unroll4x4(Matrix *X, Matrix *D) {
   }
 
   // Set diagonal elements
-  for (int i = 0; i < n; i++) {
-    D_data[i * n + i] = 0.0;
+  for (int j = 0; j < n; j++) {
+    D_data[j * n + j] = 0.0;
   }
 }
