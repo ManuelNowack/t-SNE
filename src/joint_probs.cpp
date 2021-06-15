@@ -4,7 +4,11 @@
 #include <tsne/func_registry.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <vectorclass/vectormath_exp.h>
+#pragma GCC diagnostic pop
 
 void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
   int n = X->nrows;
