@@ -60,8 +60,9 @@ int main(int argc, char const *argv[])
     return 1;
   }
 
-  Matrix X = load_matrix(argv[1]);
-  Matrix Y = load_matrix(argv[2]);
+  Matrix X, Y;
+  load_matrix(argv[1], &X);
+  load_matrix(argv[2], &Y);
 
   const int n = Y.nrows;
   const int m = Y.ncols;

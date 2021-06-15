@@ -23,8 +23,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  Matrix X = load_matrix(argv[1]);
-  Matrix Y = load_matrix(argv[2]);
+  Matrix X, Y;
+  load_matrix(argv[1], &X);
+  load_matrix(argv[2], &Y);
 
   // Determine number of samples used for benchmarking
   int n_measurements;

@@ -31,7 +31,7 @@ void destroy_tsne_variables(tsne_var_t &var) {
 /*
  * Load data in text file at filepath into Matrix structure.
  */
-Matrix load_matrix(const char *filepath) {
+void load_matrix(const char *filepath, Matrix *A) {
   // open file
   FILE *in_file = fopen(filepath, "r");
   if (in_file == NULL) {
@@ -40,7 +40,9 @@ Matrix load_matrix(const char *filepath) {
   }
 
   // determine matrix dimension
-  Matrix A = {.nrows = 0, .ncols = 0, .data = NULL};
+  A->nrows = 0;
+  A->ncols = 0;
+  A->data = NULL;
 
   double val;
   char character;
@@ -48,10 +50,10 @@ Matrix load_matrix(const char *filepath) {
   // count columns
   do {
     fscanf(in_file, "%lf", &val);
-    A.ncols++;
+    A->ncols++;
     character = (char)fgetc(in_file);
   } while (character != '\n' && character != EOF);
-  A.nrows++;
+  A->nrows++;
 
   // count rows
   int counter = 0;
@@ -61,34 +63,32 @@ Matrix load_matrix(const char *filepath) {
     character = (char)fgetc(in_file);
     if (character == '\n') {
       // check if row contains as many elements as required
-      if (counter != A.ncols) {
+      if (counter != A->ncols) {
         throw std::runtime_error(
             std::string("Error: Invalid number of elements in row ") +
-            std::to_string(A.nrows) + ": " + std::to_string(counter) +
-            " instad of " + std::to_string(A.ncols));
+            std::to_string(A->nrows) + ": " + std::to_string(counter) +
+            " instad of " + std::to_string(A->ncols));
       }
       counter = 0;
-      A.nrows++;
+      A->nrows++;
     }
   } while (character != EOF);
 
   // load data
-  A.data = (double *)aligned_alloc(32, A.nrows * A.ncols * sizeof(double));
-  if (!A.data) {
+  A->data = (double *)aligned_alloc(32, A->nrows * A->ncols * sizeof(double));
+  if (!A->data) {
     throw std::runtime_error("Could not allocate memory to store matrix.");
   }
   rewind(in_file);
   int i = 0;
   do {
-    fscanf(in_file, "%lf", &A.data[i]);
+    fscanf(in_file, "%lf", &A->data[i]);
     i++;
     character = (char)fgetc(in_file);
   } while (character != EOF);
   fclose(in_file);
 
-  DEBUG("Matrix of dimension " << A.nrows << " x " << A.ncols << " loaded");
-
-  return A;
+  DEBUG("Matrix of dimension " << A->nrows << " x " << A->ncols << " loaded");
 }
 
 /*

@@ -9,8 +9,8 @@
 class BaseTest : public testing::Test {
  protected:
   void SetUp() override {
-    X = load_matrix("mnist100_X_pca.txt");
-    Y_expected = load_matrix("mnist100_Y_init.txt");
+    load_matrix("mnist100_X_pca.txt", &X);
+    load_matrix("mnist100_Y_init.txt", &Y_expected);
     copy_matrix(&Y_expected, &Y_actual);
 
     n = X.nrows;
