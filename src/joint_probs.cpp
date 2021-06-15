@@ -53,8 +53,8 @@ void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
     }
 
     // normalize probabilities
-    for (int i = 0; i < n; i++) {
-      probabilities[i] = probabilities[i] / normalizer;
+    for (int j = 0; j < n; j++) {
+      probabilities[j] = probabilities[j] / normalizer;
     }
   }
 
@@ -120,8 +120,8 @@ void joint_probs_avx_fma_acc4(Matrix *X, Matrix *P, Matrix *D) {
     }
 
     // normalize probabilities
-    for (int i = 0; i < n; i++) {
-      probabilities[i] = probabilities[i] / normalizer;
+    for (int j = 0; j < n; j++) {
+      probabilities[j] = probabilities[j] / normalizer;
     }
   }
 
