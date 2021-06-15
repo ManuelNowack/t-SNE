@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,74 +28,95 @@ void destroy_tsne_variables(tsne_var_t &var) {
   free(var.D.data);
 }
 
-
 /*
- * Load data in text file at filepath into Matrix structure.
+ * Return value:
+ *  0 Matrix was successfully loaded
+ *  1 Failed to open file at filepath
+ *  2 Failed to read next double in the file
+ *  3 Unexpected end of file
+ *  4 Unexpected number of doubles in a row 
+ *  5 Failed to allocate matrix
  */
-Matrix load_matrix(const char *filepath) {
-  // open file
+int load_matrix_verbose(const char *filepath, Matrix *A) {
   FILE *in_file = fopen(filepath, "r");
-  if (in_file == NULL) {
-    throw std::runtime_error(
-        std::string("Could not load matrix from filepath ") + filepath);
+  if (!in_file) {
+    return 1;
   }
 
-  // determine matrix dimension
-  Matrix A = {.nrows = 0, .ncols = 0, .data = NULL};
-
   double val;
-  char character;
+  int delimiter, items_read;
 
   // count columns
+  A->ncols = 0;
   do {
-    fscanf(in_file, "%lf", &val);
-    A.ncols++;
-    character = (char)fgetc(in_file);
-  } while (character != '\n' && character != EOF);
-  A.nrows++;
+    items_read = fscanf(in_file, "%lf", &val);
+    if (items_read != 1) {
+      return 2;
+    }
+    A->ncols++;
+    delimiter = fgetc(in_file);
+    if (delimiter == EOF) {
+      return 3;
+    }
+  } while (delimiter != '\n');
+  A->nrows = 1;
 
   // count rows
   int counter = 0;
   do {
-    fscanf(in_file, "%lf", &val);
+    items_read = fscanf(in_file, "%lf", &val);
+    if (items_read == EOF) {
+      break;
+    }
+    if (items_read != 1) {
+      return 2;
+    }
     counter++;
-    character = (char)fgetc(in_file);
-    if (character == '\n') {
+    delimiter = fgetc(in_file);
+    if (delimiter == '\n') {
       // check if row contains as many elements as required
-      if (counter != A.ncols) {
-        throw std::runtime_error(
-            std::string("Error: Invalid number of elements in row ") +
-            std::to_string(A.nrows) + ": " + std::to_string(counter) +
-            " instad of " + std::to_string(A.ncols));
+      if (counter != A->ncols) {
+        return 4;
       }
       counter = 0;
-      A.nrows++;
+      A->nrows++;
     }
-  } while (character != EOF);
+  } while (delimiter != EOF);
 
   // load data
-  A.data = (double *)aligned_alloc(32, A.nrows * A.ncols * sizeof(double));
-  if (!A.data) {
-    throw std::runtime_error("Could not allocate memory to store matrix.");
+  A->data = (double *)aligned_alloc(32, A->nrows * A->ncols * sizeof(double));
+  if (!A->data) {
+    return 5;
   }
   rewind(in_file);
   int i = 0;
   do {
-    fscanf(in_file, "%lf", &A.data[i]);
-    i++;
-    character = (char)fgetc(in_file);
-  } while (character != EOF);
+    items_read = fscanf(in_file, "%lf", &A->data[i++]);
+    if (items_read == EOF) {
+      break;
+    }
+    if (items_read != 1) {
+      return 2;
+    }
+    delimiter = fgetc(in_file);
+  } while (delimiter != EOF);
   fclose(in_file);
 
-  DEBUG("Matrix of dimension " << A.nrows << " x " << A.ncols << " loaded");
+  return 0;
+}
 
-  return A;
+/*
+ * Load data in text file at filepath into Matrix structure.
+ */
+void load_matrix(const char *filepath, Matrix *A) {
+  assert(load_matrix_verbose(filepath, A) == 0);
+  DEBUG("Matrix of dimension " << A->nrows << " x " << A->ncols << " loaded");
 }
 
 /*
  * Store matrix A into a text file at filepath.
  */
-void store_matrix(const char *filepath, Matrix A) {
+void store_matrix(const char *filepath, Matrix *A) {
   FILE *out_file = fopen(filepath, "w");
 
   if (out_file == NULL) {
@@ -102,14 +124,14 @@ void store_matrix(const char *filepath, Matrix A) {
         std::string("Could not store matrix to filepath ") + filepath);
   }
 
-  int n = A.nrows;
-  int m = A.ncols;
+  int n = A->nrows;
+  int m = A->ncols;
 
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m - 1; j++) {
-      fprintf(out_file, "%.18e ", A.data[m * i + j]);
+      fprintf(out_file, "%.18e ", A->data[m * i + j]);
     }
-    fprintf(out_file, "%.18e\n", A.data[m * i + m - 1]);
+    fprintf(out_file, "%.18e\n", A->data[m * i + m - 1]);
   }
 
   fclose(out_file);
@@ -126,10 +148,6 @@ Matrix create_matrix(int nrows, int ncols) {
   }
 
   return A;
-}
-
-void assert_finite_matrix(Matrix A) {
-  throw std::runtime_error("assert_finite_matrix not implemented.");
 }
 
 void copy_matrix(const Matrix *orig, Matrix *copy) {

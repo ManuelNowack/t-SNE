@@ -3,7 +3,11 @@
 #include <tsne/debug.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <vectorclass/vectormath_exp.h>
+#pragma GCC diagnostic pop
 
 void log_perplexity_unroll2(double *distances, double *probabilities, int n,
                             int k, double precision, double *log_perplexity,

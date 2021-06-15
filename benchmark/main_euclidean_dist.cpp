@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  Matrix X = load_matrix(argv[1]);
+  Matrix X;
+  load_matrix(argv[1], &X);
   
   // Determine number of samples used for benchmarking
   int n_measurements;

@@ -735,8 +735,8 @@ void grad_desc_vec_bottom(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
         twoi += 2;
     }
 
-    __m256d mean = {0,0,0,0};
-    __m256d n_vec = {n,n,n,n};
+    __m256d mean = _mm256_setzero_pd();
+    __m256d n_vec = _mm256_set1_pd(n);
     __m256d y, ydelta, mean_shuffled, mean_shuffled2;
     int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
     int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
@@ -924,8 +924,8 @@ void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
         twoi += 8;
     }
 
-    __m256d mean = {0,0,0,0};
-    __m256d n_vec = {n,n,n,n};
+    __m256d mean = _mm256_setzero_pd();
+    __m256d n_vec = _mm256_set1_pd(n);
     __m256d y, ydelta, mean_shuffled, mean_shuffled2;
     int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
     int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]

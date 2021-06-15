@@ -135,8 +135,8 @@ void joint_probs_baseline(Matrix *X, Matrix *P, Matrix *D) {
     }
 
     // normalize probabilities
-    for (int i = 0; i < n; i++) {
-      probabilities[i] = probabilities[i] / normalizer;
+    for (int j = 0; j < n; j++) {
+      probabilities[j] = probabilities[j] / normalizer;
     }
   }
 

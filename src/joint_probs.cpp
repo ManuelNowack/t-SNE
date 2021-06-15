@@ -4,7 +4,11 @@
 #include <tsne/func_registry.h>
 #include <tsne/hyperparams.h>
 #include <tsne/matrix.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <vectorclass/vectormath_exp.h>
+#pragma GCC diagnostic pop
 
 void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
   int n = X->nrows;
@@ -49,8 +53,8 @@ void joint_probs_unroll8(Matrix *X, Matrix *P, Matrix *D) {
     }
 
     // normalize probabilities
-    for (int i = 0; i < n; i++) {
-      probabilities[i] = probabilities[i] / normalizer;
+    for (int j = 0; j < n; j++) {
+      probabilities[j] = probabilities[j] / normalizer;
     }
   }
 
@@ -116,8 +120,8 @@ void joint_probs_avx_fma_acc4(Matrix *X, Matrix *P, Matrix *D) {
     }
 
     // normalize probabilities
-    for (int i = 0; i < n; i++) {
-      probabilities[i] = probabilities[i] / normalizer;
+    for (int j = 0; j < n; j++) {
+      probabilities[j] = probabilities[j] / normalizer;
     }
   }
 

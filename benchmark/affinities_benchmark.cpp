@@ -60,8 +60,9 @@ int main(int argc, char const *argv[])
     return 1;
   }
 
-  Matrix X = load_matrix(argv[1]);
-  Matrix Y = load_matrix(argv[2]);
+  Matrix X, Y;
+  load_matrix(argv[1], &X);
+  load_matrix(argv[2], &Y);
 
   double cycles;
   cycles = perf_affinities(affinities_baseline, &X, &Y);

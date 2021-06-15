@@ -6,6 +6,9 @@
 
 #include "tsc_x86.h"
 
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+
 // Computes and reports the number of cycles required per iteration
 // for the given tsne function.
 double perf_test_tsne(tsne_func_t *f, Matrix &X, Matrix &Y) {
