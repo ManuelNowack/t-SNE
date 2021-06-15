@@ -6,6 +6,8 @@ add_library(tsne_library
     affinities.cpp
     euclidean_dist.cpp
     euclidean_dist_low.cpp
+    grad_desc.cpp
+    tsne.cpp
     tsne_no_vars.cpp
 )
 
