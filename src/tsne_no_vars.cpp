@@ -190,7 +190,7 @@ void grad_desc_no_vars_tmp(Matrix *Y, tsne_var_t *var, int n, int m,
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
     for (int l = 0; l < m; l++) {
-      double sum = 0.0;
+      sum = 0.0;
       for (int j = 0; j < n; j++) {
         const double tmp_value =
             (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
@@ -308,7 +308,7 @@ void grad_desc_no_vars_D(Matrix *Y, tsne_var_t *var, int n, int m,
   // START: Gradient Descent
   for (int i = 0; i < n; i++) {
     for (int l = 0; l < m; l++) {
-      double sum = 0.0;
+      sum = 0.0;
       for (int j = 0; j < n; j++) {
         const double tmp_value =
             (var->P.data[i * n + j] - var->Q.data[i * n + j]) *
