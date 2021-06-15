@@ -7,29 +7,6 @@
 
 #define REP 3
 
-void create_tsne_variables(tsne_var_t &var, int n, int n_dim) {
-  var.P = create_matrix(n, n);
-  var.Q = create_matrix(n, n);
-  var.Q_numerators = create_matrix(n, n);
-  var.grad_Y = create_matrix(n, n_dim);
-  var.Y_delta = create_matrix(n, n_dim);
-  var.tmp = create_matrix(n, n);
-  var.gains = create_matrix(n, n_dim);
-  var.D = create_matrix(n, n);
-}
-
-void destroy_tsne_variables(tsne_var_t &var) {
-  free(var.P.data);
-  free(var.Q.data);
-  free(var.Q_numerators.data);
-  free(var.grad_Y.data);
-  free(var.Y_delta.data);
-  free(var.tmp.data);
-  free(var.gains.data);
-  free(var.D.data);
-}
-
-
 int main(int argc, char **argv) {
   if (argc < 3) {
     printf("Usage: %s X_PCA Y_INIT\n", argv[0]);

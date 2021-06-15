@@ -17,7 +17,8 @@ void register_functions() {
       .add_function(&tsne_scalar, "tsne_scalar")
       .add_function(&tsne_vec, "tsne_vec")
       .add_function(&tsne_vec2, "tsne_vec2")
-      .add_function(&tsne_vec3, "tsne_vec3");
+      .add_function(&tsne_vec3, "tsne_vec3")
+      .add_function(&tsne_no_vars, "tsne_no_vars");
 
   // Put all (at least one!) joint_probs functions to test here.
   joint_probs_func_registry
@@ -34,7 +35,19 @@ void register_functions() {
   .add_function(&grad_desc_accumulators2,"grad_desc_accumulators2")
   .add_function(&grad_desc_accumulators,"grad_desc_accumulators")
   .add_function(&grad_desc_vec_bottom,"grad_desc_vec_bottom")
-  .add_function(&grad_desc_vectorized,"grad_desc_vectorized");
+  .add_function(&grad_desc_vectorized,"grad_desc_vectorized")
+  .add_function(&grad_desc_no_vars_baseline, "grad_desc_no_vars_baseline")
+  .add_function(&grad_desc_no_vars_tmp, "grad_desc_no_vars_tmp")
+  .add_function(&grad_desc_no_vars_D, "grad_desc_no_vars_D")
+  .add_function(&grad_desc_no_vars_Q, "grad_desc_no_vars_Q")
+  .add_function(&grad_desc_no_vars_Q_numerators,
+                "grad_desc_no_vars_Q_numerators")
+  .add_function(&grad_desc_no_vars_scalar, "grad_desc_no_vars_scalar")
+  .add_function(&grad_desc_no_vars_no_if, "grad_desc_no_vars_no_if")
+  .add_function(&grad_desc_no_vars_unroll2, "grad_desc_no_vars_unroll2")
+  .add_function(&grad_desc_no_vars_unroll4, "grad_desc_no_vars_unroll4")
+  .add_function(&grad_desc_no_vars_unroll6, "grad_desc_no_vars_unroll6")
+  .add_function(&grad_desc_no_vars_unroll8, "grad_desc_no_vars_unroll8");
 
   // Put all log_perplexity functions to test here.
   log_perplexity_func_registry

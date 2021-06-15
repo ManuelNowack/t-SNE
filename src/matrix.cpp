@@ -4,6 +4,30 @@
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
+
+void create_tsne_variables(tsne_var_t &var, int n, int m) {
+  var.P = create_matrix(n, n);
+  var.Q = create_matrix(n, n);
+  var.Q_numerators = create_matrix(n, n);
+  var.grad_Y = create_matrix(n, m);
+  var.Y_delta = create_matrix(n, m);
+  var.tmp = create_matrix(n, n);
+  var.gains = create_matrix(n, m);
+  var.D = create_matrix(n, n);
+}
+
+void destroy_tsne_variables(tsne_var_t &var) {
+  free(var.P.data);
+  free(var.Q.data);
+  free(var.Q_numerators.data);
+  free(var.grad_Y.data);
+  free(var.Y_delta.data);
+  free(var.tmp.data);
+  free(var.gains.data);
+  free(var.D.data);
+}
+
+
 /*
  * Load data in text file at filepath into Matrix structure.
  */
@@ -108,7 +132,7 @@ void assert_finite_matrix(Matrix A) {
   throw std::runtime_error("assert_finite_matrix not implemented.");
 }
 
-void copy_matrix(Matrix *orig, Matrix *copy) {
+void copy_matrix(const Matrix *orig, Matrix *copy) {
   copy->ncols = orig->ncols;
   copy->nrows = orig->nrows;
   size_t datasize = copy->nrows * copy->ncols * sizeof(double);
