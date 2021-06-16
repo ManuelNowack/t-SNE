@@ -1817,8 +1817,8 @@ void grad_desc_no_vars_no_l_pure(double *Y, const double *P, double *grad_Y,
       }
 
       const double tmp_value = (P[i * n + j] - q_value) * q_numerator_value;
-      const double value_l1 = tmp_value * (Y_i_1 - Y[j * m]);
-      const double value_l2 = tmp_value * (Y_i_2 - Y[j * m + 1]);
+      const double value_l1 = tmp_value * dist_k1;
+      const double value_l2 = tmp_value * dist_k2;
       sum_l1 += value_l1;
       sum_l2 += value_l2;
     }
