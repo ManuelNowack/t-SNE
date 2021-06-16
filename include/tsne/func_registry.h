@@ -37,7 +37,7 @@ grad_desc_func_t grad_desc_baseline, grad_desc_ndim_unroll,
     grad_desc_no_vars_scalar, grad_desc_no_vars_no_if,
     grad_desc_no_vars_unroll2, grad_desc_no_vars_unroll4,
     grad_desc_no_vars_unroll6, grad_desc_no_vars_unroll8,
-    grad_desc_no_vars_fetch;
+    grad_desc_no_vars_fetch, grad_desc_no_vars_no_l;
 
 // Put all euclidean_dist function declarations here.
 euclidean_dist_func_t euclidean_dist_baseline, euclidean_dist_unroll2,

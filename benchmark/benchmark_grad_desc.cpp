@@ -111,5 +111,8 @@ int main(int argc, char const *argv[])
   cycles = perf_grad_desc(grad_desc_no_vars_fetch, &Y, &var);
   printf("grad_desc_no_vars_fetch %e\n", cycles);
 
+  cycles = perf_grad_desc(grad_desc_no_vars_no_l, &Y, &var);
+  printf("grad_desc_no_vars_no_l %e\n", cycles);
+
   destroy_tsne_variables(var);
 }
