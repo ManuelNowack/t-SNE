@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <float.h>
+#include <immintrin.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -1880,6 +1881,142 @@ void grad_desc_no_vars_no_l_pure(double *Y, const double *P, double *grad_Y,
 void grad_desc_no_vars_no_l(Matrix *Y, tsne_var_t *var, int n, int m,
                             double momentum) {
   grad_desc_no_vars_no_l_pure(Y->data, var->P.data, var->grad_Y.data,
+                              var->Y_delta.data, var->gains.data, n, m,
+                              momentum);
+}
+
+
+void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
+                                   double *Y_delta, double *gains, int n, int m,
+                                   double momentum) {
+  assert(m == 2);
+
+  double sum = 0;
+  for (int i = 0; i < n; i++) {
+    const double Y_i_1 = Y[i * m];
+    const double Y_i_2 = Y[i * m + 1];
+    for (int j = i + 1; j < n; j++) {
+      double dist_sum = 0.0;
+      const double dist_1 = Y_i_1 - Y[j * m];
+      const double dist_2 = Y_i_2 - Y[j * m + 1];
+      dist_sum += dist_1 * dist_1;
+      dist_sum += dist_2 * dist_2;
+      const double value = 1.0 / (1.0 + dist_sum);
+      sum += value;
+    }
+  }
+
+  const __m256d norm = _mm256_set1_pd(0.5 / sum);
+  const __m256d one = _mm256_set1_pd(1.0);
+  const __m256d four = _mm256_set1_pd(4.0);
+
+  constexpr int unroll_factor = 4;
+  assert(n % unroll_factor == 0);
+  for (int i = 0; i < n; i += unroll_factor) {
+    const __m256d a = _mm256_load_pd(Y + i * m);
+    const __m256d b = _mm256_load_pd(Y + i * m + 4);
+    const __m256d a_perm = _mm256_permute4x64_pd(a, 0b11011000);
+    const __m256d b_perm = _mm256_permute4x64_pd(b, 0b10001101);
+    const __m256d c = _mm256_blend_pd(a_perm, b_perm, 0b0011);
+    const __m256d d = _mm256_blend_pd(a_perm, b_perm, 0b1100);
+    const __m256d Y_i_1 = c;
+    const __m256d Y_i_2 = _mm256_permute4x64_pd(d, 0b01001110);
+    __m256d sum_l1 = _mm256_setzero_pd();
+    __m256d sum_l2 = _mm256_setzero_pd();
+    for (int j = 0; j < n; j++) {
+      const __m256d Y_j_1 = _mm256_set1_pd(Y[j * m]);
+      const __m256d Y_j_2 = _mm256_set1_pd(Y[j * m + 1]);
+      const __m256d dist_k1 = Y_i_1 - Y_j_1;
+      const __m256d dist_k2 = Y_i_2 - Y_j_2;
+      __m256d dist_sum = _mm256_mul_pd(dist_k1, dist_k1);
+      dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
+      dist_sum = _mm256_add_pd(dist_sum, one);
+      const __m256d q_numerator_value = _mm256_div_pd(one, dist_sum);
+
+      const __m256d q_value = _mm256_mul_pd(q_numerator_value, norm);
+      // if (q_value < kMinimumProbability) {
+      //   q_value = kMinimumProbability;
+      // }
+
+      const __m256d p = _mm256_set1_pd(P[i * n + j]);
+      const __m256d sub = _mm256_sub_pd(p, q_value);
+
+      const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
+      const __m256d value_l1 = tmp_value * dist_k1;
+      const __m256d value_l2 = tmp_value * dist_k1;
+      sum_l1 = _mm256_add_pd(sum_l1, value_l1);
+      sum_l2 = _mm256_add_pd(sum_l2, value_l2);
+    }
+    sum_l1 = _mm256_mul_pd(sum_l1, four);
+    sum_l2 = _mm256_mul_pd(sum_l2, four);
+    double out[8];
+    _mm256_store_pd(out, sum_l1);
+    _mm256_store_pd(out + 4, sum_l2);
+    grad_Y[i * m] = out[0];
+    grad_Y[i * m + 2] = out[1];
+    grad_Y[i * m + 4] = out[2];
+    grad_Y[i * m + 6] = out[3];
+    grad_Y[i * m + 1] = out[4];
+    grad_Y[i * m + 3] = out[5];
+    grad_Y[i * m + 5] = out[6];
+    grad_Y[i * m + 7] = out[7];
+  }
+
+  // calculate gains, according to adaptive heuristic of Python implementation
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const bool positive_grad = (grad_Y[i * m + j] > 0);
+      const bool positive_delta = (Y_delta[i * m + j] > 0);
+      double value = gains[i * m + j];
+      if ((positive_grad && positive_delta) ||
+          (!positive_grad && !positive_delta)) {
+        value *= 0.8;
+      } else {
+        value += 0.2;
+      }
+      if (value < kMinGain) {
+        value = kMinGain;
+      }
+      gains[i * m + j] = value;
+    }
+  }
+
+  // update step
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const double value = momentum * Y_delta[i * m + j] -
+                           kEta * gains[i * m + j] * grad_Y[i * m + j];
+      Y_delta[i * m + j] = value;
+      Y[i * m + j] += value;
+    }
+  }
+
+  // center each dimension at 0
+  double means[m];
+  for (int j = 0; j < m; j++) {
+    means[j] = 0.0;
+  }
+  // accumulate
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      means[j] += Y[i * m + j];
+    }
+  }
+  // take mean
+  for (int j = 0; j < m; j++) {
+    means[j] /= n;
+  }
+  // center
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      Y[i * m + j] -= means[j];
+    }
+  }
+}
+
+void grad_desc_no_vars_vector(Matrix *Y, tsne_var_t *var, int n, int m,
+                            double momentum) {
+  grad_desc_no_vars_vector_pure(Y->data, var->P.data, var->grad_Y.data,
                               var->Y_delta.data, var->gains.data, n, m,
                               momentum);
 }
