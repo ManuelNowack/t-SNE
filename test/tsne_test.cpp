@@ -150,7 +150,9 @@ TEST_P(JointProbsTest, IsValid) {
 }
 
 TEST_P(GradDescTest, IsValid) {
+  joint_probs_baseline(&X, &var_expected.P, &var_expected.D);
   grad_desc_baseline(&Y_expected, &var_expected, n, n_dim, kFinalMomentum);
+  joint_probs_baseline(&X, &var_actual.P, &var_actual.D);
   GetParam()(&Y_actual, &var_actual, n, n_dim, kFinalMomentum);
 
   EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
