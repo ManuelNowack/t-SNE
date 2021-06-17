@@ -1,8 +1,5 @@
 #!/bin/bash
 
-module load gcc/6.3.0 cmake/3.16.5 valgrind/3.13.0
-rm -r build
-cmake -S . -B build -DBUILD_GMOCK=OFF
-cmake --build build
-
-valgrind --tool=callgrind --simulate-cache=yes --dump-instr=yes build/bin/profiling_joint_probs mnist2500_X.txt mnist2500_Y_init.txt
+for i in `seq 2 13`; do
+  valgrind --tool=callgrind --callgrind-out-file=analysis/tsne/callgrind.out.tsne.$i --simulate-cache=yes build/bin/profiling_tsne mnist10k_X.txt mnist10k_Y_init.txt $i $i
+done
