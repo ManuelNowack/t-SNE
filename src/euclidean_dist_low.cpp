@@ -6,6 +6,16 @@
 #include <tsne/debug.h>
 #include <tsne/matrix.h>
 
+#if __GNUC__ < 10
+// Polyfill for _mm256_storeu2_m128d
+extern __inline void
+    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+    _mm256_storeu2_m128d(double *__PH, double *__PL, __m256d __A) {
+  _mm_storeu_pd(__PL, _mm256_castpd256_pd128(__A));
+  _mm_storeu_pd(__PH, _mm256_extractf128_pd(__A, 1));
+}
+#endif
+
 /*
 * Squared Euclidean distance functions optimised for two-dimensional points
 */
