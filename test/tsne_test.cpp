@@ -23,7 +23,11 @@ INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                                          &grad_desc_no_vars_unroll2,
                                          &grad_desc_no_vars_unroll4,
                                          &grad_desc_no_vars_unroll6,
-                                         &grad_desc_no_vars_unroll8));
+                                         &grad_desc_no_vars_unroll8,
+                                         &grad_desc_no_vars_fetch,
+                                         &grad_desc_no_vars_no_l,
+                                         &grad_desc_no_vars_unroll,
+                                         &grad_desc_no_vars_vector));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
@@ -146,7 +150,9 @@ TEST_P(JointProbsTest, IsValid) {
 }
 
 TEST_P(GradDescTest, IsValid) {
+  joint_probs_baseline(&X, &var_expected.P, &var_expected.D);
   grad_desc_baseline(&Y_expected, &var_expected, n, n_dim, kFinalMomentum);
+  joint_probs_baseline(&X, &var_actual.P, &var_actual.D);
   GetParam()(&Y_actual, &var_actual, n, n_dim, kFinalMomentum);
 
   EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
