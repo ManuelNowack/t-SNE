@@ -1907,6 +1907,7 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
 
   const double norm = 0.5 / sum;
 
+  assert(n % 4 == 0);
   for (int i = 0; i < n; i += 2) {
     const double Y_i_1[2] = {Y[i * 2], Y[i * 2 + 2]};
     const double Y_i_2[2] = {Y[i * 2 + 1], Y[i * 2 + 3]};
@@ -1919,8 +1920,8 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
       const double dist_k2[2] = {Y_i_2[0] - Y_j_2, Y_i_2[1] - Y_j_2};
       double dist_sum[2] = {0.0, 0.0};
       dist_sum[0] += dist_k1[0] * dist_k1[0];
-      dist_sum[1] += dist_k1[1] * dist_k1[1];
       dist_sum[0] += dist_k2[0] * dist_k2[0];
+      dist_sum[1] += dist_k1[1] * dist_k1[1];
       dist_sum[1] += dist_k2[1] * dist_k2[1];
       dist_sum[0] += 1.0;
       dist_sum[1] += 1.0;
@@ -1936,7 +1937,7 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
         q_value[1] = kMinimumProbability;
       }
 
-      const double tmp_value[2] = {(P[i * n + j] - q_value[0]) * q_numerator_value[0], (P[i * n + j + 2] - q_value[1]) * q_numerator_value[1]};
+      const double tmp_value[2] = {(P[i * n + j] - q_value[0]) * q_numerator_value[0], (P[(i + 1) * n + j] - q_value[1]) * q_numerator_value[1]};
       const double value_l1[2] = {tmp_value[0] * dist_k1[0], tmp_value[1] * dist_k1[1]};
       const double value_l2[2] = {tmp_value[0] * dist_k2[0], tmp_value[1] * dist_k2[1]};
       sum_l1[0] += value_l1[0];
@@ -1944,10 +1945,10 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
       sum_l2[0] += value_l2[0];
       sum_l2[1] += value_l2[1];
     }
-    grad_Y[i * m] = 4.0 * sum_l1[0];
-    grad_Y[i * m + 1] = 4.0 * sum_l2[0];
-    grad_Y[i * m + 2] = 4.0 * sum_l1[1];
-    grad_Y[i * m + 3] = 4.0 * sum_l2[1];
+    grad_Y[i * 2] = 4.0 * sum_l1[0];
+    grad_Y[i * 2 + 1] = 4.0 * sum_l2[0];
+    grad_Y[i * 2 + 2] = 4.0 * sum_l1[1];
+    grad_Y[i * 2 + 3] = 4.0 * sum_l2[1];
   }
 
   // calculate gains, according to adaptive heuristic of Python implementation
@@ -2054,7 +2055,7 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
       __m256d q_value = _mm256_mul_pd(q_numerator_value, norm);
       q_value = _mm256_max_pd(q_value, minimum_probability);
 
-      const __m256d p = {P[i * n + j], P[i * n + j + 2], P[i * n + j + 4], P[i * n + j + 6]};
+      const __m256d p = {P[i * n + j], P[(i + 1) * n + j], P[(i + 2) * n + j], P[(i + 3) * n + j]};
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
