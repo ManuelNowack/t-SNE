@@ -1672,12 +1672,12 @@ void grad_desc_no_vars_fetch_pure(double *Y, const double *P, double *grad_Y,
 
   double sum = 0;
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     for (int j = i + 1; j < n; j++) {
       double dist_sum = 0.0;
-      const double dist_1 = Y_i_1 - Y[j * m];
-      const double dist_2 = Y_i_2 - Y[j * m + 1];
+      const double dist_1 = Y_i1 - Y[j * m];
+      const double dist_2 = Y_i2 - Y[j * m + 1];
       dist_sum += dist_1 * dist_1;
       dist_sum += dist_2 * dist_2;
       const double value = 1.0 / (1.0 + dist_sum);
@@ -1688,15 +1688,15 @@ void grad_desc_no_vars_fetch_pure(double *Y, const double *P, double *grad_Y,
   const double norm = 0.5 / sum;
 
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     for (int l = 0; l < m; l++) {
       const double Y_i_l = Y[i * m + l];
       sum = 0.0;
       for (int j = 0; j < n; j++) {
         double dist_sum = 0.0;
-        const double dist_1 = Y_i_1 - Y[j * m];
-        const double dist_2 = Y_i_2 - Y[j * m + 1];
+        const double dist_1 = Y_i1 - Y[j * m];
+        const double dist_2 = Y_i2 - Y[j * m + 1];
         dist_sum += dist_1 * dist_1;
         dist_sum += dist_2 * dist_2;
         const double q_numerator_value = 1.0 / (1.0 + dist_sum);
@@ -1782,12 +1782,12 @@ void grad_desc_no_vars_no_l_pure(double *Y, const double *P, double *grad_Y,
 
   double sum = 0;
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     for (int j = i + 1; j < n; j++) {
       double dist_sum = 0.0;
-      const double dist_1 = Y_i_1 - Y[j * m];
-      const double dist_2 = Y_i_2 - Y[j * m + 1];
+      const double dist_1 = Y_i1 - Y[j * m];
+      const double dist_2 = Y_i2 - Y[j * m + 1];
       dist_sum += dist_1 * dist_1;
       dist_sum += dist_2 * dist_2;
       const double value = 1.0 / (1.0 + dist_sum);
@@ -1798,14 +1798,14 @@ void grad_desc_no_vars_no_l_pure(double *Y, const double *P, double *grad_Y,
   const double norm = 0.5 / sum;
 
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     double sum_l1 = 0.0;
     double sum_l2 = 0.0;
     for (int j = 0; j < n; j++) {
       double dist_sum = 0.0;
-      const double dist_k1 = Y_i_1 - Y[j * m];
-      const double dist_k2 = Y_i_2 - Y[j * m + 1];
+      const double dist_k1 = Y_i1 - Y[j * m];
+      const double dist_k2 = Y_i2 - Y[j * m + 1];
       dist_sum += dist_k1 * dist_k1;
       dist_sum += dist_k2 * dist_k2;
       const double q_numerator_value = 1.0 / (1.0 + dist_sum);
@@ -1892,12 +1892,12 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
 
   double sum = 0;
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     for (int j = i + 1; j < n; j++) {
       double dist_sum = 0.0;
-      const double dist_1 = Y_i_1 - Y[j * m];
-      const double dist_2 = Y_i_2 - Y[j * m + 1];
+      const double dist_1 = Y_i1 - Y[j * m];
+      const double dist_2 = Y_i2 - Y[j * m + 1];
       dist_sum += dist_1 * dist_1;
       dist_sum += dist_2 * dist_2;
       const double value = 1.0 / (1.0 + dist_sum);
@@ -1909,15 +1909,15 @@ void grad_desc_no_vars_unroll_pure(double *Y, const double *P, double *grad_Y,
 
   assert(n % 4 == 0);
   for (int i = 0; i < n; i += 2) {
-    const double Y_i_1[2] = {Y[i * 2], Y[i * 2 + 2]};
-    const double Y_i_2[2] = {Y[i * 2 + 1], Y[i * 2 + 3]};
+    const double Y_i1[2] = {Y[i * 2], Y[i * 2 + 2]};
+    const double Y_i2[2] = {Y[i * 2 + 1], Y[i * 2 + 3]};
     double sum_l1[2] = {0.0, 0.0};
     double sum_l2[2] = {0.0, 0.0};
     for (int j = 0; j < n; j++) {
-      const double Y_j_1 = Y[j * 2];
-      const double Y_j_2 = Y[j * 2 + 1];
-      const double dist_k1[2] = {Y_i_1[0] - Y_j_1, Y_i_1[1] - Y_j_1};
-      const double dist_k2[2] = {Y_i_2[0] - Y_j_2, Y_i_2[1] - Y_j_2};
+      const double Y_j1 = Y[j * 2];
+      const double Y_j2 = Y[j * 2 + 1];
+      const double dist_k1[2] = {Y_i1[0] - Y_j1, Y_i1[1] - Y_j1};
+      const double dist_k2[2] = {Y_i2[0] - Y_j2, Y_i2[1] - Y_j2};
       double dist_sum[2] = {0.0, 0.0};
       dist_sum[0] += dist_k1[0] * dist_k1[0];
       dist_sum[0] += dist_k2[0] * dist_k2[0];
@@ -2017,12 +2017,12 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
 
   double sum = 0;
   for (int i = 0; i < n; i++) {
-    const double Y_i_1 = Y[i * m];
-    const double Y_i_2 = Y[i * m + 1];
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
     for (int j = i + 1; j < n; j++) {
       double dist_sum = 0.0;
-      const double dist_1 = Y_i_1 - Y[j * m];
-      const double dist_2 = Y_i_2 - Y[j * m + 1];
+      const double dist_1 = Y_i1 - Y[j * m];
+      const double dist_2 = Y_i2 - Y[j * m + 1];
       dist_sum += dist_1 * dist_1;
       dist_sum += dist_2 * dist_2;
       const double value = 1.0 / (1.0 + dist_sum);
@@ -2037,15 +2037,15 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
 
   assert(n % 4 == 0);
   for (int i = 0; i < n; i += 4) {
-    const __m256d Y_i_1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
-    const __m256d Y_i_2 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
+    const __m256d Y_i1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
+    const __m256d Y_i2 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
     __m256d sum_l1 = _mm256_setzero_pd();
     __m256d sum_l2 = _mm256_setzero_pd();
     for (int j = 0; j < n; j++) {
-      const __m256d Y_j_1 = _mm256_set1_pd(Y[j * m]);
-      const __m256d Y_j_2 = _mm256_set1_pd(Y[j * m + 1]);
-      const __m256d dist_k1 = Y_i_1 - Y_j_1;
-      const __m256d dist_k2 = Y_i_2 - Y_j_2;
+      const __m256d Y_j1 = _mm256_set1_pd(Y[j * m]);
+      const __m256d Y_j2 = _mm256_set1_pd(Y[j * m + 1]);
+      const __m256d dist_k1 = Y_i1 - Y_j1;
+      const __m256d dist_k2 = Y_i2 - Y_j2;
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
