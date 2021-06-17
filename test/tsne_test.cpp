@@ -26,6 +26,7 @@ INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
                                          &grad_desc_no_vars_unroll8,
                                          &grad_desc_no_vars_fetch,
                                          &grad_desc_no_vars_no_l,
+                                         &grad_desc_no_vars_unroll,
                                          &grad_desc_no_vars_vector));
 
 INSTANTIATE_TEST_SUITE_P(
