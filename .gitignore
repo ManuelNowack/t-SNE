@@ -1,3 +1,6 @@
+# Large mnist file
+mnist10k*
+mnist60k*
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,linux,cmake,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,linux,cmake,windows
