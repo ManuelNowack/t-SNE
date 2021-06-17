@@ -75,6 +75,15 @@ int main(int argc, char const *argv[])
   cycles = perf_grad_desc(grad_desc_baseline, &Y, &var);
   printf("grad_desc_baseline %e\n", cycles);
 
+  cycles = perf_grad_desc(_grad_desc_vec, &Y, &var);
+  printf("_grad_desc_vec %e\n", cycles);
+
+  cycles = perf_grad_desc(_grad_desc_vec2, &Y, &var);
+  printf("_grad_desc_vec2 %e\n", cycles);
+
+  cycles = perf_grad_desc(_grad_desc_vec3, &Y, &var);
+  printf("_grad_desc_vec3 %e\n", cycles);
+
   cycles = perf_grad_desc(grad_desc_no_vars_baseline, &Y, &var);
   printf("grad_desc_no_vars_baseline %e\n", cycles);
 
@@ -107,6 +116,18 @@ int main(int argc, char const *argv[])
 
   cycles = perf_grad_desc(grad_desc_no_vars_unroll8, &Y, &var);
   printf("grad_desc_no_vars_unroll8 %e\n", cycles);
+
+  cycles = perf_grad_desc(grad_desc_no_vars_fetch, &Y, &var);
+  printf("grad_desc_no_vars_fetch %e\n", cycles);
+
+  cycles = perf_grad_desc(grad_desc_no_vars_no_l, &Y, &var);
+  printf("grad_desc_no_vars_no_l %e\n", cycles);
+
+  cycles = perf_grad_desc(grad_desc_no_vars_unroll, &Y, &var);
+  printf("grad_desc_no_vars_unroll %e\n", cycles);
+
+  cycles = perf_grad_desc(grad_desc_no_vars_vector, &Y, &var);
+  printf("grad_desc_no_vars_vector %e\n", cycles);
 
   destroy_tsne_variables(var);
 }
