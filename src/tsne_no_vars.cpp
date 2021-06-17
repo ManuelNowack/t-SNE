@@ -2032,18 +2032,12 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
   const __m256d norm = _mm256_set1_pd(0.5 / sum);
   const __m256d one = _mm256_set1_pd(1.0);
   const __m256d four = _mm256_set1_pd(4.0);
+  const __m256d minimum_probability = _mm256_set1_pd(kMinimumProbability);
 
-  constexpr int unroll_factor = 4;
-  assert(n % unroll_factor == 0);
-  for (int i = 0; i < n; i += unroll_factor) {
-    const __m256d a = _mm256_load_pd(Y + i * m);
-    const __m256d b = _mm256_load_pd(Y + i * m + 4);
-    const __m256d a_perm = _mm256_permute4x64_pd(a, 0b11011000);
-    const __m256d b_perm = _mm256_permute4x64_pd(b, 0b10001101);
-    const __m256d c = _mm256_blend_pd(a_perm, b_perm, 0b0011);
-    const __m256d d = _mm256_blend_pd(a_perm, b_perm, 0b1100);
-    const __m256d Y_i_1 = c;
-    const __m256d Y_i_2 = _mm256_permute4x64_pd(d, 0b01001110);
+  assert(n % 4 == 0);
+  for (int i = 0; i < n; i += 4) {
+    const __m256d Y_i_1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
+    const __m256d Y_i_2 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
     __m256d sum_l1 = _mm256_setzero_pd();
     __m256d sum_l2 = _mm256_setzero_pd();
     for (int j = 0; j < n; j++) {
@@ -2051,22 +2045,21 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
       const __m256d Y_j_2 = _mm256_set1_pd(Y[j * m + 1]);
       const __m256d dist_k1 = Y_i_1 - Y_j_1;
       const __m256d dist_k2 = Y_i_2 - Y_j_2;
-      __m256d dist_sum = _mm256_mul_pd(dist_k1, dist_k1);
+      __m256d dist_sum = _mm256_setzero_pd();
+      dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
       dist_sum = _mm256_add_pd(dist_sum, one);
       const __m256d q_numerator_value = _mm256_div_pd(one, dist_sum);
 
-      const __m256d q_value = _mm256_mul_pd(q_numerator_value, norm);
-      // if (q_value < kMinimumProbability) {
-      //   q_value = kMinimumProbability;
-      // }
+      __m256d q_value = _mm256_mul_pd(q_numerator_value, norm);
+      q_value = _mm256_max_pd(q_value, minimum_probability);
 
-      const __m256d p = _mm256_set1_pd(P[i * n + j]);
+      const __m256d p = {P[i * n + j], P[i * n + j + 2], P[i * n + j + 4], P[i * n + j + 6]};
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
       const __m256d value_l1 = tmp_value * dist_k1;
-      const __m256d value_l2 = tmp_value * dist_k1;
+      const __m256d value_l2 = tmp_value * dist_k2;
       sum_l1 = _mm256_add_pd(sum_l1, value_l1);
       sum_l2 = _mm256_add_pd(sum_l2, value_l2);
     }
