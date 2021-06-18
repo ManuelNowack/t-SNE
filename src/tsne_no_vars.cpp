@@ -2042,8 +2042,8 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
     __m256d sum_l1 = _mm256_setzero_pd();
     __m256d sum_l2 = _mm256_setzero_pd();
     for (int j = 0; j < n; j++) {
-      const __m256d Y_j1 = _mm256_set1_pd(Y[j * m]);
-      const __m256d Y_j2 = _mm256_set1_pd(Y[j * m + 1]);
+      const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
+      const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
       const __m256d dist_k1 = Y_i1 - Y_j1;
       const __m256d dist_k2 = Y_i2 - Y_j2;
       __m256d dist_sum = _mm256_setzero_pd();
@@ -2069,14 +2069,14 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
     double out[8];
     _mm256_store_pd(out, sum_l1);
     _mm256_store_pd(out + 4, sum_l2);
-    grad_Y[i * m] = out[0];
-    grad_Y[i * m + 2] = out[1];
-    grad_Y[i * m + 4] = out[2];
-    grad_Y[i * m + 6] = out[3];
-    grad_Y[i * m + 1] = out[4];
-    grad_Y[i * m + 3] = out[5];
-    grad_Y[i * m + 5] = out[6];
-    grad_Y[i * m + 7] = out[7];
+    grad_Y[i * 2] = out[0];
+    grad_Y[i * 2 + 2] = out[1];
+    grad_Y[i * 2 + 4] = out[2];
+    grad_Y[i * 2 + 6] = out[3];
+    grad_Y[i * 2 + 1] = out[4];
+    grad_Y[i * 2 + 3] = out[5];
+    grad_Y[i * 2 + 5] = out[6];
+    grad_Y[i * 2 + 7] = out[7];
   }
 
   // calculate gains, according to adaptive heuristic of Python implementation
