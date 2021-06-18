@@ -827,6 +827,99 @@ void grad_desc_no_vars_no_if(Matrix *Y, tsne_var_t *var, int n, int m,
                                momentum);
 }
 
+void grad_desc_no_vars_grad_pure(double *Y, const double *P, double *Y_delta,
+                                 double *gains, int n, int m, double momentum) {
+  double sum = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      double dist_sum = 0.0;
+      for (int k = 0; k < m; k++) {
+        const double dist = Y[i * m + k] - Y[j * m + k];
+        dist_sum += dist * dist;
+      }
+      const double value = 1.0 / (1.0 + dist_sum);
+      sum += value;
+    }
+  }
+
+  const double norm = 0.5 / sum;
+
+  for (int i = 0; i < n; i++) {
+    for (int l = 0; l < m; l++) {
+      sum = 0.0;
+      for (int j = 0; j < n; j++) {
+        double dist_sum = 0.0;
+        for (int k = 0; k < m; k++) {
+          const double dist = Y[i * m + k] - Y[j * m + k];
+          dist_sum += dist * dist;
+        }
+        const double q_numerator_value = 1.0 / (1.0 + dist_sum);
+
+        double q_value = q_numerator_value;
+        q_value *= norm;
+        if (q_value < kMinimumProbability) {
+          q_value = kMinimumProbability;
+        }
+
+        const double tmp_value = (P[i * n + j] - q_value) * q_numerator_value;
+        const double value = tmp_value * (Y[i * m + l] - Y[j * m + l]);
+        sum += value;
+      }
+      const double grad = 4.0 * sum;
+      const double old_delta = Y_delta[i * m + l];
+      const bool positive_grad = (grad > 0);
+      const bool positive_delta = (old_delta > 0);
+      double gain = gains[i * m + l];
+      if (positive_grad == positive_delta) {
+        gain *= 0.8;
+      } else {
+        gain += 0.2;
+      }
+      if (gain < kMinGain) {
+        gain = kMinGain;
+      }
+      gains[i * m + l] = gain;
+      const double new_delta = momentum * old_delta - kEta * gain * grad;
+      Y_delta[i * m + l] = new_delta;
+    }
+  }
+
+  // update step
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      Y[i * m + j] += Y_delta[i * m + j];
+    }
+  }
+
+  // center each dimension at 0
+  double means[m];
+  for (int j = 0; j < m; j++) {
+    means[j] = 0.0;
+  }
+  // accumulate
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      means[j] += Y[i * m + j];
+    }
+  }
+  // take mean
+  for (int j = 0; j < m; j++) {
+    means[j] /= n;
+  }
+  // center
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      Y[i * m + j] -= means[j];
+    }
+  }
+}
+
+void grad_desc_no_vars_grad(Matrix *Y, tsne_var_t *var, int n, int m,
+                             double momentum) {
+  grad_desc_no_vars_grad_pure(Y->data, var->P.data, var->Y_delta.data,
+                              var->gains.data, n, m, momentum);
+}
+
 void grad_desc_no_vars_unroll2_pure(double *Y, const double *P, double *grad_Y,
                                     double *Y_delta, double *gains, int n,
                                     int m, double momentum) {
