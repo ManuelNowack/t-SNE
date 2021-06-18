@@ -2138,6 +2138,169 @@ void grad_desc_no_vars_vector(Matrix *Y, tsne_var_t *var, int n, int m,
                               momentum);
 }
 
+void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *grad_Y,
+                                   double *Y_delta, double *gains, int n, int m,
+                                   double momentum) {
+  assert(m == 2);
+
+  double sum = 0;
+  for (int i = 0; i < n; i++) {
+    const double Y_i1 = Y[i * m];
+    const double Y_i2 = Y[i * m + 1];
+    for (int j = i + 1; j < n; j++) {
+      double dist_sum = 0.0;
+      const double dist_1 = Y_i1 - Y[j * m];
+      const double dist_2 = Y_i2 - Y[j * m + 1];
+      dist_sum += dist_1 * dist_1;
+      dist_sum += dist_2 * dist_2;
+      const double value = 1.0 / (1.0 + dist_sum);
+      sum += value;
+    }
+  }
+
+  const __m256d norm = _mm256_set1_pd(0.5 / sum);
+  const __m256d one = _mm256_set1_pd(1.0);
+  const __m256d four = _mm256_set1_pd(4.0);
+  const __m256d minimum_probability = _mm256_set1_pd(kMinimumProbability);
+
+  assert(n % 8 == 0);
+  for (int i = 0; i < n; i += 8) {
+    const __m256d Y_i1_1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
+    const __m256d Y_i2_1 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
+    const __m256d Y_i1_2 = {Y[i * 2 + 8], Y[i * 2 + 10], Y[i * 2 + 12], Y[i * 2 + 14]};
+    const __m256d Y_i2_2 = {Y[i * 2 + 9], Y[i * 2 + 11], Y[i * 2 + 13], Y[i * 2 + 15]};
+    __m256d sum_l1_1 = _mm256_setzero_pd();
+    __m256d sum_l2_1 = _mm256_setzero_pd();
+    __m256d sum_l1_2 = _mm256_setzero_pd();
+    __m256d sum_l2_2 = _mm256_setzero_pd();
+    for (int j = 0; j < n; j++) {
+      const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
+      const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
+      const __m256d dist_k1_1 = Y_i1_1 - Y_j1;
+      const __m256d dist_k2_1 = Y_i2_1 - Y_j2;
+      const __m256d dist_k1_2 = Y_i1_2 - Y_j1;
+      const __m256d dist_k2_2 = Y_i2_2 - Y_j2;
+      __m256d dist_sum_1 = _mm256_setzero_pd();
+      dist_sum_1 = _mm256_fmadd_pd(dist_k1_1, dist_k1_1, dist_sum_1);
+      dist_sum_1 = _mm256_fmadd_pd(dist_k2_1, dist_k2_1, dist_sum_1);
+      dist_sum_1 = _mm256_add_pd(dist_sum_1, one);
+      __m256d dist_sum_2 = _mm256_setzero_pd();
+      dist_sum_2 = _mm256_fmadd_pd(dist_k1_2, dist_k1_2, dist_sum_2);
+      dist_sum_2 = _mm256_fmadd_pd(dist_k2_2, dist_k2_2, dist_sum_2);
+      dist_sum_2 = _mm256_add_pd(dist_sum_2, one);
+      const __m256d q_numerator_value_1 = _mm256_div_pd(one, dist_sum_1);
+      const __m256d q_numerator_value_2 = _mm256_div_pd(one, dist_sum_2);
+
+      __m256d q_value_1 = _mm256_mul_pd(q_numerator_value_1, norm);
+      __m256d q_value_2 = _mm256_mul_pd(q_numerator_value_2, norm);
+      q_value_1 = _mm256_max_pd(q_value_1, minimum_probability);
+      q_value_2 = _mm256_max_pd(q_value_2, minimum_probability);
+
+      const __m256d p_1 = {P[i * n + j], P[(i + 1) * n + j], P[(i + 2) * n + j], P[(i + 3) * n + j]};
+      const __m256d p_2 = {P[(i + 4) * n + j], P[(i + 5) * n + j], P[(i + 6) * n + j], P[(i + 7) * n + j]};
+      const __m256d sub_1 = _mm256_sub_pd(p_1, q_value_1);
+      const __m256d sub_2 = _mm256_sub_pd(p_2, q_value_2);
+
+      const __m256d tmp_value_1 = _mm256_mul_pd(sub_1, q_numerator_value_1);
+      const __m256d tmp_value_2 = _mm256_mul_pd(sub_2, q_numerator_value_2);
+      const __m256d value_l1_1 = tmp_value_1 * dist_k1_1;
+      const __m256d value_l2_1 = tmp_value_1 * dist_k2_1;
+      const __m256d value_l1_2 = tmp_value_2 * dist_k1_2;
+      const __m256d value_l2_2 = tmp_value_2 * dist_k2_2;
+      sum_l1_1 = _mm256_add_pd(sum_l1_1, value_l1_1);
+      sum_l2_1 = _mm256_add_pd(sum_l2_1, value_l2_1);
+      sum_l1_2 = _mm256_add_pd(sum_l1_2, value_l1_2);
+      sum_l2_2 = _mm256_add_pd(sum_l2_2, value_l2_2);
+    }
+    sum_l1_1 = _mm256_mul_pd(sum_l1_1, four);
+    sum_l2_1 = _mm256_mul_pd(sum_l2_1, four);
+    sum_l1_2 = _mm256_mul_pd(sum_l1_2, four);
+    sum_l2_2 = _mm256_mul_pd(sum_l2_2, four);
+    double out[16];
+    _mm256_store_pd(out, sum_l1_1);
+    _mm256_store_pd(out + 4, sum_l2_1);
+    _mm256_store_pd(out + 8, sum_l1_2);
+    _mm256_store_pd(out + 12, sum_l2_2);
+    grad_Y[i * 2] = out[0];
+    grad_Y[i * 2 + 2] = out[1];
+    grad_Y[i * 2 + 4] = out[2];
+    grad_Y[i * 2 + 6] = out[3];
+
+    grad_Y[i * 2 + 1] = out[4];
+    grad_Y[i * 2 + 3] = out[5];
+    grad_Y[i * 2 + 5] = out[6];
+    grad_Y[i * 2 + 7] = out[7];
+
+    grad_Y[i * 2 + 8] = out[8];
+    grad_Y[i * 2 + 10] = out[9];
+    grad_Y[i * 2 + 12] = out[10];
+    grad_Y[i * 2 + 14] = out[11];
+
+    grad_Y[i * 2 + 9] = out[12];
+    grad_Y[i * 2 + 11] = out[13];
+    grad_Y[i * 2 + 13] = out[14];
+    grad_Y[i * 2 + 15] = out[15];
+  }
+
+  // calculate gains, according to adaptive heuristic of Python implementation
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const bool positive_grad = (grad_Y[i * m + j] > 0);
+      const bool positive_delta = (Y_delta[i * m + j] > 0);
+      double value = gains[i * m + j];
+      if ((positive_grad && positive_delta) ||
+          (!positive_grad && !positive_delta)) {
+        value *= 0.8;
+      } else {
+        value += 0.2;
+      }
+      if (value < kMinGain) {
+        value = kMinGain;
+      }
+      gains[i * m + j] = value;
+    }
+  }
+
+  // update step
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      const double value = momentum * Y_delta[i * m + j] -
+                           kEta * gains[i * m + j] * grad_Y[i * m + j];
+      Y_delta[i * m + j] = value;
+      Y[i * m + j] += value;
+    }
+  }
+
+  // center each dimension at 0
+  double means[m];
+  for (int j = 0; j < m; j++) {
+    means[j] = 0.0;
+  }
+  // accumulate
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      means[j] += Y[i * m + j];
+    }
+  }
+  // take mean
+  for (int j = 0; j < m; j++) {
+    means[j] /= n;
+  }
+  // center
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      Y[i * m + j] -= means[j];
+    }
+  }
+}
+
+void grad_desc_no_vars_vector_unroll2(Matrix *Y, tsne_var_t *var, int n, int m,
+                            double momentum) {
+  grad_desc_no_vars_vector_unroll2_pure(Y->data, var->P.data, var->grad_Y.data,
+                              var->Y_delta.data, var->gains.data, n, m,
+                              momentum);
+}
+
 void tsne_no_vars(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
   int n = X->nrows;
 
