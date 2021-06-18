@@ -108,6 +108,9 @@ int main(int argc, char const *argv[])
   cycles = perf_grad_desc(grad_desc_no_vars_grad, &Y, &var);
   printf("grad_desc_no_vars_grad %e\n", cycles);
 
+  cycles = perf_grad_desc(grad_desc_no_vars_means, &Y, &var);
+  printf("grad_desc_no_vars_means %e\n", cycles);
+
   cycles = perf_grad_desc(grad_desc_no_vars_unroll2, &Y, &var);
   printf("grad_desc_no_vars_unroll2 %e\n", cycles);
 
