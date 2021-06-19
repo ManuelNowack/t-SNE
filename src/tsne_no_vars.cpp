@@ -2766,7 +2766,7 @@ void grad_desc_no_vars_vector_unroll2(Matrix *Y, tsne_var_t *var, int n, int m,
 void tsne_no_vars(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
   int n = X->nrows;
 
-  joint_probs_baseline(X, &var->P, &var->D);
+  joint_probs_avx_fma_acc4(X, &var->P, &var->D);
 
   // determine embeddings
   for (int i = 0; i < n; i++) {
@@ -2794,6 +2794,6 @@ void tsne_no_vars(Matrix *X, Matrix *Y, tsne_var_t *var, int m) {
       momentum = kFinalMomentum;
     }
 
-    grad_desc_no_vars_scalar(Y, var, n, m, momentum);
+    grad_desc_no_vars_vector_acc(Y, var, n, m, momentum);
   }
 }
