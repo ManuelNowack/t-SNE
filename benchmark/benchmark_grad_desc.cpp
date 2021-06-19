@@ -135,8 +135,8 @@ int main(int argc, char const *argv[])
   cycles = perf_grad_desc(grad_desc_no_vars_vector, &Y, &var);
   printf("grad_desc_no_vars_vector %e\n", cycles);
 
-  cycles = perf_grad_desc(grad_desc_no_vars_vector_all, &Y, &var);
-  printf("grad_desc_no_vars_vector_all %e\n", cycles);
+  cycles = perf_grad_desc(grad_desc_no_vars_vector_acc, &Y, &var);
+  printf("grad_desc_no_vars_vector_acc %e\n", cycles);
 
   cycles = perf_grad_desc(grad_desc_no_vars_vector_inner, &Y, &var);
   printf("grad_desc_no_vars_vector_inner %e\n", cycles);

@@ -2311,7 +2311,7 @@ void grad_desc_no_vars_vector(Matrix *Y, tsne_var_t *var, int n, int m,
                               momentum);
 }
 
-void grad_desc_no_vars_vector_all_pure(double *Y, const double *P, double *grad_Y,
+void grad_desc_no_vars_vector_acc_pure(double *Y, const double *P, double *grad_Y,
                                    double *Y_delta, double *gains, int n, int m,
                                    double momentum) {
   assert(m == 2);
@@ -2319,11 +2319,10 @@ void grad_desc_no_vars_vector_all_pure(double *Y, const double *P, double *grad_
 
   const __m256d one = _mm256_set1_pd(1.0);
 
-  double sum = 0;
+  __m256d sum_acc = _mm256_setzero_pd();
   for (int i = 0; i < n; i += 4) {
     const __m256d Y_i1 = _mm256_set_pd(Y[i * 2 + 6], Y[i * 2 + 4], Y[i * 2 + 2], Y[i * 2]);
     const __m256d Y_i2 = _mm256_set_pd(Y[i * 2 + 7], Y[i * 2 + 5], Y[i * 2 + 3], Y[i * 2 + 1]);
-    __m256d sum_vec = _mm256_setzero_pd();
     for (int j = i + 1; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
@@ -2334,17 +2333,14 @@ void grad_desc_no_vars_vector_all_pure(double *Y, const double *P, double *grad_
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
       dist_sum = _mm256_add_pd(dist_sum, one);
       const __m256d q_numerator_value = _mm256_div_pd(one, dist_sum);
-      sum_vec = _mm256_add_pd(sum_vec, q_numerator_value);
+      sum_acc = _mm256_add_pd(sum_acc, q_numerator_value);
     }
-    double out[4];
-    _mm256_store_pd(out, sum_vec);
-    sum += out[0];
-    sum += out[1];
-    sum += out[2];
-    sum += out[3];
   }
+  double out[4];
+  _mm256_store_pd(out, sum_acc);
+  const double sum_scalar = out[0] + out[1] + out[2] + out[3];
 
-  const __m256d norm = _mm256_set1_pd(0.5 / sum);
+  const __m256d norm = _mm256_set1_pd(0.5 / sum_scalar);
   const __m256d four = _mm256_set1_pd(4.0);
   const __m256d minimum_probability = _mm256_set1_pd(kMinimumProbability);
 
@@ -2378,17 +2374,17 @@ void grad_desc_no_vars_vector_all_pure(double *Y, const double *P, double *grad_
     }
     sum_l1 = _mm256_mul_pd(sum_l1, four);
     sum_l2 = _mm256_mul_pd(sum_l2, four);
-    double out[8];
-    _mm256_store_pd(out, sum_l1);
-    _mm256_store_pd(out + 4, sum_l2);
-    grad_Y[i * 2] = out[0];
-    grad_Y[i * 2 + 2] = out[1];
-    grad_Y[i * 2 + 4] = out[2];
-    grad_Y[i * 2 + 6] = out[3];
-    grad_Y[i * 2 + 1] = out[4];
-    grad_Y[i * 2 + 3] = out[5];
-    grad_Y[i * 2 + 5] = out[6];
-    grad_Y[i * 2 + 7] = out[7];
+    double ooout[8];
+    _mm256_store_pd(ooout, sum_l1);
+    _mm256_store_pd(ooout + 4, sum_l2);
+    grad_Y[i * 2] = ooout[0];
+    grad_Y[i * 2 + 2] = ooout[1];
+    grad_Y[i * 2 + 4] = ooout[2];
+    grad_Y[i * 2 + 6] = ooout[3];
+    grad_Y[i * 2 + 1] = ooout[4];
+    grad_Y[i * 2 + 3] = ooout[5];
+    grad_Y[i * 2 + 5] = ooout[6];
+    grad_Y[i * 2 + 7] = ooout[7];
   }
 
   // calculate gains, according to adaptive heuristic of Python implementation
@@ -2443,9 +2439,9 @@ void grad_desc_no_vars_vector_all_pure(double *Y, const double *P, double *grad_
   }
 }
 
-void grad_desc_no_vars_vector_all(Matrix *Y, tsne_var_t *var, int n, int m,
+void grad_desc_no_vars_vector_acc(Matrix *Y, tsne_var_t *var, int n, int m,
                             double momentum) {
-  grad_desc_no_vars_vector_all_pure(Y->data, var->P.data, var->grad_Y.data,
+  grad_desc_no_vars_vector_acc_pure(Y->data, var->P.data, var->grad_Y.data,
                               var->Y_delta.data, var->gains.data, n, m,
                               momentum);
 }
