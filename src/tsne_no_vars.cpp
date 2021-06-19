@@ -2210,8 +2210,8 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
 
   assert(n % 4 == 0);
   for (int i = 0; i < n; i += 4) {
-    const __m256d Y_i1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
-    const __m256d Y_i2 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
+    const __m256d Y_i1 = _mm256_set_pd(Y[i * 2 + 6], Y[i * 2 + 4], Y[i * 2 + 2], Y[i * 2]);
+    const __m256d Y_i2 = _mm256_set_pd(Y[i * 2 + 7], Y[i * 2 + 5], Y[i * 2 + 3], Y[i * 2 + 1]);
     __m256d sum_l1 = _mm256_setzero_pd();
     __m256d sum_l2 = _mm256_setzero_pd();
     for (int j = 0; j < n; j++) {
@@ -2228,7 +2228,7 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
       __m256d q_value = _mm256_mul_pd(q_numerator_value, norm);
       q_value = _mm256_max_pd(q_value, minimum_probability);
 
-      const __m256d p = {P[i * n + j], P[(i + 1) * n + j], P[(i + 2) * n + j], P[(i + 3) * n + j]};
+      const __m256d p = _mm256_set_pd(P[(i + 3) * n + j], P[(i + 2) * n + j], P[(i + 1) * n + j], P[i * n + j]);
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
@@ -2338,10 +2338,10 @@ void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *g
 
   assert(n % 8 == 0);
   for (int i = 0; i < n; i += 8) {
-    const __m256d Y_i1_1 = {Y[i * 2 + 0], Y[i * 2 + 2], Y[i * 2 + 4], Y[i * 2 + 6]};
-    const __m256d Y_i2_1 = {Y[i * 2 + 1], Y[i * 2 + 3], Y[i * 2 + 5], Y[i * 2 + 7]};
-    const __m256d Y_i1_2 = {Y[i * 2 + 8], Y[i * 2 + 10], Y[i * 2 + 12], Y[i * 2 + 14]};
-    const __m256d Y_i2_2 = {Y[i * 2 + 9], Y[i * 2 + 11], Y[i * 2 + 13], Y[i * 2 + 15]};
+    const __m256d Y_i1_1 = _mm256_set_pd(Y[i * 2 + 6], Y[i * 2 + 4], Y[i * 2 + 2], Y[i * 2]);
+    const __m256d Y_i2_1 = _mm256_set_pd(Y[i * 2 + 7], Y[i * 2 + 5], Y[i * 2 + 3], Y[i * 2 + 1]);
+    const __m256d Y_i1_2 = _mm256_set_pd(Y[i * 2 + 14], Y[i * 2 + 12], Y[i * 2 + 10], Y[i * 2 + 8]);
+    const __m256d Y_i2_2 = _mm256_set_pd(Y[i * 2 + 15], Y[i * 2 + 13], Y[i * 2 + 11], Y[i * 2 + 9]);
     __m256d sum_l1_1 = _mm256_setzero_pd();
     __m256d sum_l2_1 = _mm256_setzero_pd();
     __m256d sum_l1_2 = _mm256_setzero_pd();
@@ -2369,8 +2369,8 @@ void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *g
       q_value_1 = _mm256_max_pd(q_value_1, minimum_probability);
       q_value_2 = _mm256_max_pd(q_value_2, minimum_probability);
 
-      const __m256d p_1 = {P[i * n + j], P[(i + 1) * n + j], P[(i + 2) * n + j], P[(i + 3) * n + j]};
-      const __m256d p_2 = {P[(i + 4) * n + j], P[(i + 5) * n + j], P[(i + 6) * n + j], P[(i + 7) * n + j]};
+      const __m256d p_1 = _mm256_set_pd(P[(i + 3) * n + j], P[(i + 2) * n + j], P[(i + 1) * n + j], P[i * n + j]);
+      const __m256d p_2 = _mm256_set_pd(P[(i + 7) * n + j], P[(i + 6) * n + j], P[(i + 5) * n + j], P[(i + 4) * n + j]);
       const __m256d sub_1 = _mm256_sub_pd(p_1, q_value_1);
       const __m256d sub_2 = _mm256_sub_pd(p_2, q_value_2);
 
