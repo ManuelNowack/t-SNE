@@ -161,7 +161,7 @@ TEST_P(GradDescTest, IsValid) {
   GetParam()(&Y_actual, &var_actual, n, n_dim, kFinalMomentum);
 
   EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
-                          Y_expected.ncols * Y_expected.nrows, "Y", 0.0));
+                          Y_expected.ncols * Y_expected.nrows, "Y", 3.0));
   // compare_tsne_var(var_expected, var_actual, 0.0);
 }
 
