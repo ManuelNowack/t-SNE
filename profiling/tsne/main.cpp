@@ -3,8 +3,6 @@
 
 #include <iostream>
 #include <random>
-#include <string>
-#include <vector>
 
 using namespace std;
 
@@ -59,13 +57,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  auto &tsne_func_registry = FuncRegistry<tsne_func_t>::get_instance();
-  tsne_func_registry.add_function(&tsne_baseline, "tsne_baseline")
-      .add_function(&tsne_scalar, "tsne_scalar")
-      .add_function(&tsne_vec, "tsne_vec")
-      .add_function(&tsne_vec2, "tsne_vec2")
-      .add_function(&tsne_vec3, "tsne_vec3")
-      .add_function(&tsne_no_vars, "tsne_no_vars");
+  const int num_funcs = 6;
+  tsne_func_t *funcs[num_funcs] = {&tsne_baseline, &tsne_scalar, &tsne_vec,
+                                   &tsne_vec2,     &tsne_vec3,   &tsne_no_vars};
 
   const int n_dim = 2;
 
@@ -78,8 +72,8 @@ int main(int argc, char **argv) {
     tsne_var_t var;
     create_tsne_variables(var, n_samples, n_dim);
 
-    for (tsne_func_t *f : tsne_func_registry.funcs) {
-      f(&X_sub, &Y_sub, &var, n_dim);
+    for (int i = 0; i < num_funcs; i++) {
+      funcs[i](&X_sub, &Y_sub, &var, n_dim);
     }
 
     destroy_tsne_variables(var);
