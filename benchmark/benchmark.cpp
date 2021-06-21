@@ -125,7 +125,7 @@ double perf_test_joint_probs(joint_probs_func_t *f, Matrix &X) {
 }
 
 // Computes and reports the number of cycles required per iteration
-// for the given joint probabilities function.
+// for the given gradient descent function.
 double perf_test_grad_desc(grad_desc_func_t *f, Matrix &X, Matrix &Y) {
   double cycles = 0.;
   size_t num_runs = 1;
@@ -139,6 +139,9 @@ double perf_test_grad_desc(grad_desc_func_t *f, Matrix &X, Matrix &Y) {
 
   // Populate the joint probability matrix.
   joint_probs_avx_fma_acc4(&X, &var.P, &var.D);
+  calc_affinities(&Y, &var.Q, &var.Q_numerators, &var.D);
+  
+  
 
   do {
     num_runs = num_runs * multiplier;

@@ -14,6 +14,7 @@ typedef void euclidean_dist_func_t(Matrix *X, Matrix *D);
 typedef void log_perplexity_func_t(double *distances, double *probabilities,
                                    int n, int k, double precision,
                                    double *log_perplexity, double *normlizer);
+typedef void calc_affinities_t(Matrix *Y, Matrix *Q, Matrix *Q_numerators, Matrix *D);
 
 // Put all log_perp_actual fuction declarations here.
 log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
@@ -22,6 +23,8 @@ log_perplexity_func_t log_perplexity_baseline, log_perplexity_unroll2,
 
 // Put all tsne function declarations here.
 tsne_func_t tsne_baseline;
+
+calc_affinities_t calc_affinities;
 
 // Put all joint_probs function declarations here.
 joint_probs_func_t joint_probs_baseline, joint_probs_unroll8,
