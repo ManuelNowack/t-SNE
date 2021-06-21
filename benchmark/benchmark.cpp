@@ -138,7 +138,7 @@ double perf_test_grad_desc(grad_desc_func_t *f, Matrix &X, Matrix &Y) {
   create_tsne_variables(var, n, n_dim);
 
   // Populate the joint probability matrix.
-  joint_probs_baseline(&X, &var.P, &var.D);
+  joint_probs_avx_fma_acc4(&X, &var.P, &var.D);
 
   do {
     num_runs = num_runs * multiplier;

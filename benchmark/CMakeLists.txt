@@ -23,6 +23,11 @@ target_link_libraries(benchmark_euclidean_dist
     PRIVATE benchmark_library
 )
 
+add_executable(benchmark_grad_desc main_grad_descent.cpp)
+target_link_libraries(benchmark_grad_desc
+    PRIVATE benchmark_library
+)
+
 add_executable(benchmark_euclidean_dist_low main_euclidean_dist_low.cpp)
 target_link_libraries(benchmark_euclidean_dist_low
     PRIVATE benchmark_library

@@ -405,6 +405,7 @@ void euclidean_dist_low_block128(Matrix *X, Matrix *D) {
 /*
 * Vectorization 1.
 */
+/*
 void euclidean_dist_low_vec1(Matrix *X, Matrix *D) {
 
   int n = X->nrows;
@@ -429,11 +430,11 @@ void euclidean_dist_low_vec1(Matrix *X, Matrix *D) {
       _mm256_storeu2_m128d(D->data + n*i + n + j, D->data + n*i + j, dists);
     }
   }
-}
+}*/
 
 /*
 * Vectorization 2.
-*/
+*//*
 void euclidean_dist_low_vec2(Matrix *X, Matrix *D) {
 
   int n = X->nrows;
@@ -457,7 +458,7 @@ void euclidean_dist_low_vec2(Matrix *X, Matrix *D) {
       _mm256_storeu2_m128d(D->data + n*i + n + j, D->data + n*i + j, dists);
     }
   }
-}
+}*/
 
 void _mm_print_pd(__m256d x) {
   __m256d y = x;

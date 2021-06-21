@@ -23,13 +23,13 @@ void register_functions() {
 
   // Put all grad_desc functions to test here.
   grad_desc_func_registry.add_function(&grad_desc_baseline,"grad_desc_baseline")
-  .add_function(&grad_desc_ndim_unroll,"grad_desc_ndim_unroll")
-  .add_function(&grad_desc_mean_unroll,"grad_desc_mean_unroll")
-  .add_function(&grad_desc_tmp_opt,"grad_desc_tmp_opt")
+  //.add_function(&grad_desc_ndim_unroll,"grad_desc_ndim_unroll")
+  //.add_function(&grad_desc_mean_unroll,"grad_desc_mean_unroll")
+  //.add_function(&grad_desc_tmp_opt,"grad_desc_tmp_opt")
   .add_function(&grad_desc_loop_merge,"grad_desc_loop_merge")
-  .add_function(&grad_desc_accumulators2,"grad_desc_accumulators2")
+  //.add_function(&grad_desc_accumulators2,"grad_desc_accumulators2")
   .add_function(&grad_desc_accumulators,"grad_desc_accumulators")
-  .add_function(&grad_desc_vec_bottom,"grad_desc_vec_bottom")
+  //.add_function(&grad_desc_vec_bottom,"grad_desc_vec_bottom")
   .add_function(&grad_desc_vectorized,"grad_desc_vectorized");
 
   // Put all log_perplexity functions to test here.
@@ -45,7 +45,8 @@ void register_functions() {
 
   // Put all euclidean_dist functions to test here.
   euclidean_dist_func_registry
-      .add_function(&euclidean_dist_baseline, "euclidean_dist_baseline")
+      .add_function(&euclidean_dist_baseline, "euclidean_dist_baseline");
+      /*
       .add_function(&euclidean_dist_unroll2, "euclidean_dist_unroll2")
       .add_function(&euclidean_dist_unroll4, "euclidean_dist_unroll4")
       .add_function(&euclidean_dist_unroll8, "euclidean_dist_unroll8")
@@ -90,5 +91,5 @@ void register_functions() {
       .add_function(&euclidean_dist_low_vec3_unroll4x8_stream,
                     "euclidean_dist_low_vec3_unroll4x8_stream")
       .add_function(&euclidean_dist_low_vec3_unroll8_stream,
-                    "euclidean_dist_low_vec3_unroll8_stream");
+                    "euclidean_dist_low_vec3_unroll8_stream");*/
 }

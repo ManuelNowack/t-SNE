@@ -1,0 +1,59 @@
+16 samples
+grad_desc_baseline,5189.88
+grad_desc_loop_merge,1509.76
+grad_desc_accumulators,1319.3
+grad_desc_vectorized,2689.7
+
+32 samples
+grad_desc_baseline,20650.7
+grad_desc_loop_merge,5245.79
+grad_desc_accumulators,4223.98
+grad_desc_vectorized,5696.15
+
+64 samples
+grad_desc_baseline,93561.4
+grad_desc_loop_merge,18160.6
+grad_desc_accumulators,15488.5
+grad_desc_vectorized,14788.7
+
+128 samples
+grad_desc_baseline,743611
+grad_desc_loop_merge,75021.1
+grad_desc_accumulators,59065.7
+grad_desc_vectorized,48208.9
+
+256 samples
+grad_desc_baseline,4.95974e+06
+grad_desc_loop_merge,315143
+grad_desc_accumulators,234320
+grad_desc_vectorized,199668
+
+512 samples
+grad_desc_baseline,2.64487e+07
+grad_desc_loop_merge,1.40538e+06
+grad_desc_accumulators,1.26114e+06
+grad_desc_vectorized,923700
+
+1024 samples
+grad_desc_baseline,1.15793e+08
+grad_desc_loop_merge,5.83923e+06
+grad_desc_accumulators,5.08743e+06
+grad_desc_vectorized,4.09594e+06
+
+2048 samples
+grad_desc_baseline,4.90592e+08
+grad_desc_loop_merge,2.3639e+07
+grad_desc_accumulators,1.97441e+07
+grad_desc_vectorized,1.53795e+07
+
+4096 samples
+grad_desc_baseline,2.41652e+09
+grad_desc_loop_merge,9.26365e+07
+grad_desc_accumulators,8.25326e+07
+grad_desc_vectorized,6.45806e+07
+
+8192 samples
+grad_desc_baseline,8.76821e+09
+grad_desc_loop_merge,4.02441e+08
+grad_desc_accumulators,3.36763e+08
+grad_desc_vectorized,2.97212e+08
