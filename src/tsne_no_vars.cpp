@@ -2232,10 +2232,8 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
-      const __m256d value_l1 = tmp_value * dist_k1;
-      const __m256d value_l2 = tmp_value * dist_k2;
-      sum_l1 = _mm256_add_pd(sum_l1, value_l1);
-      sum_l2 = _mm256_add_pd(sum_l2, value_l2);
+      sum_l1 = _mm256_fmadd_pd(tmp_value, dist_k1, sum_l1);
+      sum_l2 = _mm256_fmadd_pd(tmp_value, dist_k2, sum_l2);
     }
     sum_l1 = _mm256_mul_pd(sum_l1, four);
     sum_l2 = _mm256_mul_pd(sum_l2, four);
@@ -2367,10 +2365,8 @@ void grad_desc_no_vars_vector_acc_pure(double *Y, const double *P, double *grad_
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
-      const __m256d value_l1 = tmp_value * dist_k1;
-      const __m256d value_l2 = tmp_value * dist_k2;
-      sum_l1 = _mm256_add_pd(sum_l1, value_l1);
-      sum_l2 = _mm256_add_pd(sum_l2, value_l2);
+      sum_l1 = _mm256_fmadd_pd(tmp_value, dist_k1, sum_l1);
+      sum_l2 = _mm256_fmadd_pd(tmp_value, dist_k2, sum_l2);
     }
     sum_l1 = _mm256_mul_pd(sum_l1, four);
     sum_l2 = _mm256_mul_pd(sum_l2, four);
@@ -2514,10 +2510,8 @@ void grad_desc_no_vars_vector_inner_pure(double *Y, const double *P, double *gra
       const __m256d sub = _mm256_sub_pd(p, q_value);
 
       const __m256d tmp_value = _mm256_mul_pd(sub, q_numerator_value);
-      const __m256d value_l1 = tmp_value * dist_k1;
-      const __m256d value_l2 = tmp_value * dist_k2;
-      sum_l1 = _mm256_add_pd(sum_l1, value_l1);
-      sum_l2 = _mm256_add_pd(sum_l2, value_l2);
+      sum_l1 = _mm256_fmadd_pd(tmp_value, dist_k1, sum_l1);
+      sum_l2 = _mm256_fmadd_pd(tmp_value, dist_k2, sum_l2);
     }
     sum_l1 = _mm256_mul_pd(sum_l1, four);
     sum_l2 = _mm256_mul_pd(sum_l2, four);
@@ -2665,14 +2659,10 @@ void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *g
 
       const __m256d tmp_value_1 = _mm256_mul_pd(sub_1, q_numerator_value_1);
       const __m256d tmp_value_2 = _mm256_mul_pd(sub_2, q_numerator_value_2);
-      const __m256d value_l1_1 = tmp_value_1 * dist_k1_1;
-      const __m256d value_l2_1 = tmp_value_1 * dist_k2_1;
-      const __m256d value_l1_2 = tmp_value_2 * dist_k1_2;
-      const __m256d value_l2_2 = tmp_value_2 * dist_k2_2;
-      sum_l1_1 = _mm256_add_pd(sum_l1_1, value_l1_1);
-      sum_l2_1 = _mm256_add_pd(sum_l2_1, value_l2_1);
-      sum_l1_2 = _mm256_add_pd(sum_l1_2, value_l1_2);
-      sum_l2_2 = _mm256_add_pd(sum_l2_2, value_l2_2);
+      sum_l1_1 = _mm256_fmadd_pd(tmp_value_1, dist_k1_1, sum_l1_1);
+      sum_l2_1 = _mm256_fmadd_pd(tmp_value_1, dist_k2_1, sum_l2_1);
+      sum_l1_2 = _mm256_fmadd_pd(tmp_value_2, dist_k1_2, sum_l1_2);
+      sum_l2_2 = _mm256_fmadd_pd(tmp_value_2, dist_k2_2, sum_l2_2);
     }
     sum_l1_1 = _mm256_mul_pd(sum_l1_1, four);
     sum_l2_1 = _mm256_mul_pd(sum_l2_1, four);
