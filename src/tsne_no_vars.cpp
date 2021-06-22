@@ -2217,8 +2217,8 @@ void grad_desc_no_vars_vector_pure(double *Y, const double *P, double *grad_Y,
     for (int j = 0; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2326,8 +2326,8 @@ void grad_desc_no_vars_vector_acc_pure(double *Y, const double *P, double *grad_
     for (int j = i + 1; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2352,8 +2352,8 @@ void grad_desc_no_vars_vector_acc_pure(double *Y, const double *P, double *grad_
     for (int j = 0; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2471,8 +2471,8 @@ void grad_desc_no_vars_vector_inner_pure(double *Y, const double *P, double *gra
     for (int j = begin; j < n; j += 4) {
       const __m256d Y_j1 = _mm256_set_pd(Y[j * 2 + 6], Y[j * 2 + 4], Y[j * 2 + 2], Y[j * 2]);
       const __m256d Y_j2 = _mm256_set_pd(Y[j * 2 + 7], Y[j * 2 + 5], Y[j * 2 + 3], Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2499,8 +2499,8 @@ void grad_desc_no_vars_vector_inner_pure(double *Y, const double *P, double *gra
     for (int j = 0; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2608,8 +2608,8 @@ void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *g
     for (int j = i + 1; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1 = Y_i1 - Y_j1;
-      const __m256d dist_k2 = Y_i2 - Y_j2;
+      const __m256d dist_k1 = _mm256_sub_pd(Y_i1, Y_j1);
+      const __m256d dist_k2 = _mm256_sub_pd(Y_i2, Y_j2);
       __m256d dist_sum = _mm256_setzero_pd();
       dist_sum = _mm256_fmadd_pd(dist_k1, dist_k1, dist_sum);
       dist_sum = _mm256_fmadd_pd(dist_k2, dist_k2, dist_sum);
@@ -2638,10 +2638,10 @@ void grad_desc_no_vars_vector_unroll2_pure(double *Y, const double *P, double *g
     for (int j = 0; j < n; j++) {
       const __m256d Y_j1 = _mm256_set1_pd(Y[j * 2]);
       const __m256d Y_j2 = _mm256_set1_pd(Y[j * 2 + 1]);
-      const __m256d dist_k1_1 = Y_i1_1 - Y_j1;
-      const __m256d dist_k2_1 = Y_i2_1 - Y_j2;
-      const __m256d dist_k1_2 = Y_i1_2 - Y_j1;
-      const __m256d dist_k2_2 = Y_i2_2 - Y_j2;
+      const __m256d dist_k1_1 = _mm256_sub_pd(Y_i1_1, Y_j1);
+      const __m256d dist_k2_1 = _mm256_sub_pd(Y_i2_1, Y_j2);
+      const __m256d dist_k1_2 = _mm256_sub_pd(Y_i1_2, Y_j1);
+      const __m256d dist_k2_2 = _mm256_sub_pd(Y_i2_2, Y_j2);
       __m256d dist_sum_1 = _mm256_setzero_pd();
       dist_sum_1 = _mm256_fmadd_pd(dist_k1_1, dist_k1_1, dist_sum_1);
       dist_sum_1 = _mm256_fmadd_pd(dist_k2_1, dist_k2_1, dist_sum_1);
