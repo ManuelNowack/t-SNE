@@ -738,9 +738,9 @@ void grad_desc_vec_bottom(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
     __m256d mean = _mm256_setzero_pd();
     __m256d n_vec = _mm256_set1_pd(n);
     __m256d y, ydelta, mean_shuffled, mean_shuffled2;
-    int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
-    int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
-    int mean_last_mask = 0b0110;
+    constexpr int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
+    constexpr int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
+    constexpr int mean_last_mask = 0b0110;
     int twon = 2*n;
     for(int i=0; i<twon; i+=4){
         //load y, ydelta
@@ -771,7 +771,7 @@ void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
     // calculate low-dimensional affinities
     //calc_affinities(Y, &var->Q, &var->Q_numerators, &var->D);
 
-    int ymask = 0b11011000; //switch elements at pos 1 and 2
+    constexpr int ymask = 0b11011000; //switch elements at pos 1 and 2
     double *pdata = var->P.data;
     double *qdata = var->Q.data;
     double *q_numdata = var->Q_numerators.data;
@@ -927,9 +927,9 @@ void grad_desc_vectorized(Matrix *Y, tsne_var_t *var, int n, int n_dim, double m
     __m256d mean = _mm256_setzero_pd();
     __m256d n_vec = _mm256_set1_pd(n);
     __m256d y, ydelta, mean_shuffled, mean_shuffled2;
-    int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
-    int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
-    int mean_last_mask = 0b0110;
+    constexpr int mean_mask = 0b10001101; //setup such that we have [mean1 mean3 mean0 mean2]
+    constexpr int mean_mask2 = 0b11011000; //setup such that we have [mean0 mean2 mean1 mean3]
+    constexpr int mean_last_mask = 0b0110;
     int twon = 2*n;
     for(int i=0; i<twon; i+=4){
         //load y, ydelta
