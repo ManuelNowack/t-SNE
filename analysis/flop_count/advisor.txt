@@ -1,0 +1,14 @@
+All results are for mnist2500_X.txt with the default hyperparameters.
+
+euclidean_dist_baseline: formula 7.3, measured 7.3
+euclidean_dist_alt_baseline: formula 4.9, measured 4.9
+euclidean_dist_alt_vec_unroll4x4: formula 4.9, measured 4.9
+joint_probs_baseline: formula 14.6, measured 14.6
+joint_probs_avx_fma_acc4: formula 12.1 (?), measured 10.6
+grad_desc_baseline: formula 5.6, measured 8.1
+grad_desc_no_vars_vector_acc: formula 12.2, measured 11.9
+tsne_baseline: formula 20.2, measured 22.7
+tsne_scalar: formula 17.7 (?), measured 20.6
+tsne_vec: formula 17.7 (?), measured 19.0
+tsne_vec3: formula 17.7 (?), measured 19.3
+tsne_no_vars: formula 12.2 + join_probs, measured 22.5
