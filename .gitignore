@@ -20,6 +20,8 @@ _deps
 CMakeUserPresets.json
 build/
 build-debug/
+build-intel/
+build-intel-debug/
 
 ### CMake Patch ###
 # External projects
