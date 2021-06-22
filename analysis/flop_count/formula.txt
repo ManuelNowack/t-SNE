@@ -1,0 +1,8 @@
+euclidean_dist_low: n*(n-1)*d * 3/2
+euclidean_dist_high: 2*n*d + n*(n-1)*(d+3/2)
+joint_probs: 2329*n^2 - 805*n
+joint_probs_euc: 1939*n^2 + 1154*n
+grad_desc: 9*n^2 - 15*n
+grad_desc_no_vars: 19.5*n^2 + 13.5*n + 6
+tsne: 3228*n^2 - 2304*n
+tsne_euc: 2837*n^2 - 346*n
