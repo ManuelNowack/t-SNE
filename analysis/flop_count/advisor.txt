@@ -1,14 +1,16 @@
-All results are for mnist2500_X.txt with the default hyperparameters.
-
-euclidean_dist_baseline: formula 7.3, measured 7.3
-euclidean_dist_alt_baseline: formula 4.9, measured 4.9
-euclidean_dist_alt_vec_unroll4x4: formula 4.9, measured 4.9
-joint_probs_baseline: formula 14.6, measured 14.6
-joint_probs_avx_fma_acc4: formula 12.1 (?), measured 10.6
-grad_desc_baseline: formula 7.5, measured 8.1
-grad_desc_no_vars_vector_acc: formula 12.2, measured 11.9
-tsne_baseline: formula 22.0, measured 22.7
-tsne_scalar: formula 19.6, measured 20.6
-tsne_vec: formula 19.6, measured 19.0
-tsne_vec3: formula 19.6, measured 19.3
-tsne_no_vars: formula 12.2 + join_probs, measured 22.5
+# All results are for mnist2500_X.txt with the default hyperparameters.
+function, formula, measured
+euclidean_dist_baseline, 7347060000, 7347060000
+euclidean_dist_alt_baseline, 4911331250, 4911331250
+euclidean_dist_alt_vec_unroll4x4, 4911331250, 4936812516
+joint_probs_baseline, 14554430000, 14554874147
+joint_probs_unroll8, 12118701250, 12131647879
+joint_probs_avx_fma_acc4, 12118701250, 10587737628
+calc_affinities, 37485000, 37485001
+grad_desc_baseline, 81282502, 81282504
+grad_desc_no_vars_baseline, 81282502, 81282504
+grad_desc_no_vars_vector_acc, 128163756, 118820007
+tsne_baseline, 22682680200, 22679999547
+tsne_scalar, 20246951450, 20571148479
+tsne_vec, 20246951450, 19030800828
+tsne_vec3, 20246951450, 19352802528

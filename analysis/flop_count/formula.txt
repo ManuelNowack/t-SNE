@@ -1,8 +1,10 @@
-euclidean_dist_low: n*(n-1)*d * 3/2
-euclidean_dist_high: 2*n*d + n*(n-1)*(d+3/2)
-joint_probs: 2329*n^2 - 805*n
-joint_probs_euc: 1939*n^2 + 1154*n
-grad_desc: 12*n^2 + 12*n + 3
-grad_desc_no_vars: 19.5*n^2 + 13.5*n + 6
-tsne: 3528*n^2 + 396*n + 300
-tsne_euc: 3137.5*n^2 + 2354.5*n + 300
+calc_affinities: 6n^2 - 6n
+grad_desc_baseline: 13n^2 + 13n + 2
+joint_probs_baseline: 2329n^2 - 728n
+joint_probs_baseline_alt: 1938.5n^2 + 1230.5n
+joint_probs_any: 2*n*d + n(n-1)*(d+3/2) + 1153n^2 + 448n
+euclidean_dist_baseline: 3/2*d*n(n-1)
+euclidean_dist_alt_baseline: 2*n*d + n(n-1)*(d+3/2)
+tsne_baseline: 2329n^2 - 728n + t(13n^2 + 13n + 2)
+tsne_scalar: 1938.5n^2 + 1230.5n + t(13n^2 + 13n + 2)
+grad_desc_no_vars: 20.5*n^2 + 15.5*n + 6 (actual: 19n^2 + 28*n)
