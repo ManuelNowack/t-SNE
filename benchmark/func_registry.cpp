@@ -22,7 +22,7 @@ void register_functions() {
       .add_function(&joint_probs_avx_fma_acc4, "joint_probs_avx_fma_acc4");
 
   // Put all grad_desc functions to test here.
-  grad_desc_func_registry.add_function(&grad_desc_baseline,"grad_desc_baseline")
+  grad_desc_func_registry.add_function(&grad_desc_b,"grad_desc_baseline")
   //.add_function(&grad_desc_ndim_unroll,"grad_desc_ndim_unroll")
   .add_function(&grad_desc_mean_unroll,"grad_desc_mean_unroll")
   .add_function(&grad_desc_tmp_opt,"grad_desc_tmp_opt")

@@ -12,7 +12,7 @@ INSTANTIATE_TEST_SUITE_P(Tsne, JointProbsTest,
                                          &joint_probs_avx_fma_acc4));
 
 INSTANTIATE_TEST_SUITE_P(Tsne, GradDescTest,
-                         testing::Values(&grad_desc_baseline));
+                         testing::Values(&grad_desc_b));
 
 INSTANTIATE_TEST_SUITE_P(
     Tsne, LogPerplexityTest,
@@ -125,7 +125,7 @@ TEST_P(JointProbsTest, IsValid) {
 }
 
 TEST_P(GradDescTest, IsValid) {
-  grad_desc_baseline(&Y_expected, &var_expected, n, n_dim, kFinalMomentum);
+  grad_desc_b(&Y_expected, &var_expected, n, n_dim, kFinalMomentum);
   GetParam()(&Y_actual, &var_actual, n, n_dim, kFinalMomentum);
 
   EXPECT_TRUE(IsArrayNear(Y_expected.data, Y_actual.data,
