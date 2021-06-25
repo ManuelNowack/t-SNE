@@ -2,13 +2,13 @@ calc_affinities: 6n^2 - 6n
 grad_desc_baseline: 13n^2 + 13n + 2
 joint_probs_baseline: 2329n^2 - 728n
 joint_probs_baseline_alt: 1938.5n^2 + 1230.5n
-joint_probs_avx_fma_acc4: 2788.5n^2 + 379.5n
+joint_probs_avx_fma_acc4: 2788.5n^2 + 380.5n
 euclidean_dist_baseline: 3/2*d*n(n-1)
 euclidean_dist_alt_baseline: 2*n*d + n(n-1)*(d+3/2)
 tsne_baseline: 2329n^2 - 728n + t(13n^2 + 13n + 2)
 tsne_scalar: 1938.5n^2 + 1230.5n + t(13n^2 + 13n + 2)
-tsne_vec: 2788.5n^2 + 379.5n + t(13n^2 + 13n + 2)
-tsne_no_vars: 2788.5n^2 + 379.5n + t(20.5n^2 + 15.5n + 6)
+tsne_vec: 2788.5n^2 + 380.5n + t(13n^2 + 13n + 2)
+tsne_no_vars: 2788.5n^2 + 380.5n + t(20.5n^2 + 15.5n + 6)
 	actual: 2788.5n^2 + 379.5n + t(19n^2 + 28*n)
 grad_desc_no_vars: 20.5*n^2 + 15.5*n + 6
 	actual: 19n^2 + 28*n
