@@ -1,3 +1,7 @@
+## Abstract
+
+t-Distributed Stochastic Neighbor Embedding (t-SNE) is an embedding technique used to visualize high-dimensional data. We implement a version that is highly optimized for embedding the high-dimensional data into two dimensions, which is the most common use case, and targets common single-threaded processors. Benchmarks show that our optimized version performs up to 28x better than the original implementation supplied by the authors of t-SNE.
+
 ## Compilation
 ```shell
 cmake -S . -B build
